@@ -1,6 +1,34 @@
 let uploadedImage = null;
 let variants = [];
 
+// Theme Definitions
+const THEMES = {
+    NOIR: {
+        name: 'Noir',
+        weight: 0.4,
+        palette: { minColors: 2, maxColors: 4, saturation: 0 },
+        contrast: { min: 1.2, max: 2.0 }
+    },
+    VAPOR: {
+        name: 'Vapor',
+        weight: 0.3,
+        palette: { minColors: 3, maxColors: 5, minHue: 150, maxHue: 320, minSat: 60, maxSat: 100 },
+        contrast: { min: 0.8, max: 1.2 }
+    },
+    GLITCH: {
+        name: 'Glitch',
+        weight: 0.2,
+        palette: { minColors: 2, maxColors: 2, minSat: 90, maxSat: 100, highContrast: true },
+        contrast: { min: 1.5, max: 2.5 }
+    },
+    VOID: {
+        name: 'Void',
+        weight: 0.1,
+        palette: { minColors: 8, maxColors: 12, maxLight: 30 },
+        contrast: { min: 0.4, max: 0.7 }
+    }
+};
+
 // Seeded random number generator
 function seededRandom(seed) {
     let state = seed;
@@ -11,6 +39,20 @@ function seededRandom(seed) {
         t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
         return ((t ^ t >>> 14) >>> 0) / 4294967296;
     };
+}
+
+// Weighted Theme Selector
+function selectTheme(rng) {
+    const roll = rng();
+    let accumulatedWeight = 0;
+    
+    for (const key in THEMES) {
+        accumulatedWeight += THEMES[key].weight;
+        if (roll <= accumulatedWeight) {
+            return THEMES[key];
+        }
+    }
+    return THEMES.NOIR; // Fallback
 }
 
 // Helper to get color name from hue
@@ -26,16 +68,48 @@ function getHueName(hue) {
     return 'Unknown';
 }
 
-// Generate random color palette
-function generateColorPalette(numColors, rng) {
+// Generate theme-aware color palette
+function generateColorPalette(theme, rng) {
     const colors = [];
-    const baseHue = rng() * 360;
+    const settings = theme.palette;
+    const numColors = Math.floor(settings.minColors + rng() * (settings.maxColors - settings.minColors + 1));
+    
+    // Determine base hue based on theme
+    let baseHue;
+    if (settings.minHue !== undefined && settings.maxHue !== undefined) {
+        baseHue = settings.minHue + rng() * (settings.maxHue - settings.minHue);
+    } else {
+        baseHue = rng() * 360;
+    }
+
     const hueName = getHueName(baseHue);
     
     for (let i = 0; i < numColors; i++) {
-        const hue = (baseHue + (i * 360 / numColors)) % 360;
-        const saturation = 70 + rng() * 30;
-        const lightness = 40 + rng() * 40;
+        let hue;
+        if (settings.highContrast) {
+            // Complementary hues for high contrast
+            hue = (baseHue + (i * 180)) % 360;
+        } else {
+            hue = (baseHue + (i * 360 / numColors)) % 360;
+        }
+
+        // Saturation logic
+        let saturation;
+        if (settings.saturation !== undefined) {
+            saturation = settings.saturation;
+        } else if (settings.minSat !== undefined && settings.maxSat !== undefined) {
+            saturation = settings.minSat + rng() * (settings.maxSat - settings.minSat);
+        } else {
+            saturation = 70 + rng() * 30; // Default
+        }
+
+        // Lightness logic
+        let lightness;
+        if (settings.maxLight !== undefined) {
+            lightness = 10 + rng() * (settings.maxLight - 10);
+        } else {
+            lightness = 40 + rng() * 40; // Default
+        }
         
         const h = hue / 360;
         const s = saturation / 100;
@@ -67,7 +141,7 @@ function generateColorPalette(numColors, rng) {
             Math.round(b * 255)
         ]);
     }
-    return { colors, hueName };
+    return { colors, hueName, numColors };
 }
 
 // Apply Sierra dithering
@@ -175,12 +249,15 @@ async function generateVariants() {
             
             console.log(`Creating 2x2 grid ${variantIdx + 1}: ${gridCanvas.width}x${gridCanvas.height}`);
 
+            // Select a theme for this variant
+            const theme = selectTheme(rng);
+            console.log(`Variant ${variantIdx + 1} Theme: ${theme.name}`);
+
             // Generate 4 different dithered tiles
             const tileTraits = [];
             for (let tileIdx = 0; tileIdx < 4; tileIdx++) {
-                const numColors = 2 + Math.floor(rng() * 7);
-                const { colors: paletteColors, hueName } = generateColorPalette(numColors, rng);
-                const contrast = 0.6 + rng() * 1.6;
+                const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
+                const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
 
                 tileTraits.push({ numColors, hueName, contrast: contrast.toFixed(2) });
 
@@ -201,16 +278,17 @@ async function generateVariants() {
             }
 
             // For tiled, we use the average/combined traits or just primary
-            const primaryTrait = tileTraits[0];
             variants.push({
                 id: variantIdx + 1,
                 dataUrl: gridCanvas.toDataURL(),
                 tiled: true,
                 dimensions: `${gridCanvas.width}x${gridCanvas.height}`,
+                theme: theme.name,
                 traits: {
+                    'Theme': theme.name,
+                    'Palette Type': tileTraits[0].hueName, // Dominant hue
                     'Palette Size': tileTraits.map(t => t.numColors).join(', '),
-                    'Contrast': tileTraits.map(t => t.contrast).join(', '),
-                    'Color Theme': tileTraits.map(t => t.hueName).join(', ')
+                    'Contrast': tileTraits.map(t => t.contrast).join(', ')
                 }
             });
 
@@ -222,9 +300,10 @@ async function generateVariants() {
         console.log('=== ENTERING SINGLE IMAGE MODE ===');
         
         for (let i = 0; i < numVariants; i++) {
-            const numColors = 2 + Math.floor(rng() * 7);
-            const { colors: paletteColors, hueName } = generateColorPalette(numColors, rng);
-            const contrast = 0.6 + rng() * 1.6;
+            // Select a theme for this variant
+            const theme = selectTheme(rng);
+            const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
+            const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
 
             const canvas = document.createElement('canvas');
             canvas.width = img.width;
@@ -240,10 +319,12 @@ async function generateVariants() {
                 id: i + 1,
                 dataUrl: canvas.toDataURL(),
                 tiled: false,
+                theme: theme.name,
                 traits: {
+                    'Theme': theme.name,
+                    'Palette Type': hueName,
                     'Palette Size': numColors,
-                    'Contrast': contrast.toFixed(2),
-                    'Color Theme': hueName
+                    'Contrast': contrast.toFixed(2)
                 }
             });
 
@@ -272,7 +353,7 @@ function displayVariants() {
             <div>
                 <div class="text-xs text-zinc-500 mb-2 uppercase tracking-widest flex justify-between items-center">
                     <span class="font-mono text-white">#${variant.id}</span>
-                    ${variant.tiled ? '<span class="text-white font-bold">2x2 GRID</span>' : ''}
+                    <span class="text-zinc-400 font-bold">${variant.theme.toUpperCase()}</span>
                 </div>
                 ${variant.dimensions ? `<div class="text-xs text-zinc-600 mb-3 font-mono">${variant.dimensions}</div>` : ''}
                 <button onclick="downloadVariant(${variant.id})" class="w-full px-3 py-2 border border-white/20 hover:border-white hover:bg-white hover:text-black text-xs transition duration-300 uppercase tracking-wider font-bold">
