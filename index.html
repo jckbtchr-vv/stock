@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dithering Machine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white min-h-screen p-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Dithering Machine
+            </h1>
+            <p class="text-gray-300">Advanced dithering with exhaustive controls</p>
+        </div>
+
+        <div class="bg-slate-800/50 backdrop-blur rounded-lg p-6 mb-6 border border-purple-500/20">
+            <div class="flex flex-col gap-6">
+                <div class="flex flex-col items-center gap-4">
+                    <input type="file" id="imageUpload" accept="image/*" class="hidden">
+                    <button id="uploadBtn" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg transition">
+                        Upload Image
+                    </button>
+                    <img id="preview" class="max-w-sm rounded-lg border border-purple-500/30 hidden">
+                </div>
+
+                <div id="controls" class="hidden">
+                    <div class="border-t border-purple-500/20 pt-6 space-y-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="useTiling" checked class="w-4 h-4">
+                            <span class="text-sm text-gray-300">2x2 Tiling (Recommended)</span>
+                        </label>
+                        <p class="text-xs text-gray-400 ml-6">Creates a 2x2 grid of your image with different dithering on each tile</p>
+
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-2">Number of Variants: <span id="numVariantsValue">10</span></label>
+                            <input type="range" id="numVariants" min="1" max="150" value="10" class="w-full">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-2">Seed (optional)</label>
+                            <input type="text" id="seed" placeholder="Enter seed for reproducibility..." class="w-full px-4 py-2 bg-slate-700 border border-purple-500/30 rounded-lg text-white placeholder-gray-400">
+                        </div>
+
+                        <button id="generateBtn" class="w-full px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition">
+                            Generate Variants
+                        </button>
+
+                        <div id="progressBar" class="hidden">
+                            <div class="bg-slate-800/50 rounded-full h-4 overflow-hidden border border-purple-500/20">
+                                <div id="progress" class="h-full bg-gradient-to-r from-purple-600 to-pink-600 transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="results" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Generated Variants (<span id="variantCount">0</span>)</h2>
+                <button id="downloadMetadata" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition">
+                    Download Metadata
+                </button>
+            </div>
+            <div id="variantsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
