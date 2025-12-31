@@ -27,6 +27,18 @@ const THEMES = {
         palette: { minColors: 3, maxColors: 4, isMonoPlus: true },
         contrast: { min: 2.0, max: 3.5 }
     },
+    ANALOGOUS: {
+        name: 'Analogous',
+        weight: 0.15,
+        palette: { minColors: 3, maxColors: 5, minSat: 50, maxSat: 90, minLight: 30, maxLight: 70, strategy: 'analogous' },
+        contrast: { min: 1.1, max: 1.8 }
+    },
+    SPLIT_COMP: {
+        name: 'Split Comp.',
+        weight: 0.15,
+        palette: { minColors: 3, maxColors: 4, minSat: 60, maxSat: 100, minLight: 30, maxLight: 80, strategy: 'split_complementary' },
+        contrast: { min: 1.4, max: 2.5 }
+    },
     SPECTRAL: {
         name: 'Spectral',
         weight: 0.15,
@@ -96,11 +108,13 @@ function generateColorPalette(theme, rng) {
     const hueName = getHueName(keyHue);
     
     // Harmony Strategy
-    let strategy = 'random';
-    if (settings.isMonoPlus) strategy = 'mono_plus';
-    else if (settings.spread) strategy = 'spread';
-    else if (settings.highContrast) strategy = 'complementary';
-    else if (settings.useKeyColors) strategy = 'triadic';
+    let strategy = settings.strategy || 'random';
+    if (!settings.strategy) {
+        if (settings.isMonoPlus) strategy = 'mono_plus';
+        else if (settings.spread) strategy = 'spread';
+        else if (settings.highContrast) strategy = 'complementary';
+        else if (settings.useKeyColors) strategy = 'triadic';
+    }
 
     for (let i = 0; i < numColors; i++) {
         let h, s, l;
@@ -139,6 +153,13 @@ function generateColorPalette(theme, rng) {
             } else if (strategy === 'triadic') {
                 const offset = (i % 3) * 120;
                 h = ((keyHue + offset + rng() * 20 - 10) % 360) / 360;
+            } else if (strategy === 'analogous') {
+                const offset = (i - Math.floor(numColors / 2)) * 30;
+                h = ((keyHue + offset + rng() * 20 - 10) % 360) / 360;
+            } else if (strategy === 'split_complementary') {
+                // Key, Key+150, Key+210
+                const offsets = [0, 150, 210, 0, 150]; // Cycle if > 3 colors
+                h = ((keyHue + offsets[i % offsets.length] + rng() * 20 - 10) % 360) / 360;
             } else {
                 h = ((keyHue + rng() * 60 - 30) % 360) / 360; // Analogous-ish
             }
@@ -186,28 +207,7 @@ function generateColorPalette(theme, rng) {
             Math.round(b * 255)
         ]);
     }
-
-    // Enforce Dynamic Range (Prevent muddy/blobby artifacts)
-    const getLum = (c) => (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]);
-    let minLum = 255, maxLum = 0;
-    
-    colors.forEach(c => {
-        const l = getLum(c);
-        if (l < minLum) minLum = l;
-        if (l > maxLum) maxLum = l;
-    });
-
-    // If palette lacks darks (e.g. High Lum theme), add a dark anchor
-    if (minLum > 100) { 
-        colors.push([20, 20, 20]);
-    }
-    
-    // If palette lacks lights, add a light anchor
-    if (maxLum < 155) { 
-        colors.push([235, 235, 235]);
-    }
-
-    return { colors, hueName, numColors: colors.length };
+    return { colors, hueName, numColors };
 }
 
 // Apply Sierra dithering
@@ -279,6 +279,40 @@ function applyDithering(imageData, palette, contrast) {
     return new ImageData(data, width, height);
 }
 
+// Apply Channel Shift (Screen Print Misregistration)
+function applyChannelShift(imageData, intensity) {
+    if (intensity === 'None') return imageData;
+
+    const width = imageData.width;
+    const height = imageData.height;
+    const input = imageData.data;
+    const output = new Uint8ClampedArray(input.length);
+    
+    // Fixed subtle offset for screen print effect
+    const offset = 2; 
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const idx = (y * width + x) * 4;
+            
+            // Shift Red Left
+            const rX = Math.min(width - 1, Math.max(0, x - offset));
+            const rIdx = (y * width + rX) * 4;
+            
+            // Shift Blue Right
+            const bX = Math.min(width - 1, Math.max(0, x + offset));
+            const bIdx = (y * width + bX) * 4;
+
+            output[idx] = input[rIdx];     // Red from left
+            output[idx + 1] = input[idx + 1]; // Green stays
+            output[idx + 2] = input[bIdx + 2]; // Blue from right
+            output[idx + 3] = 255;         // Alpha
+        }
+    }
+
+    return new ImageData(output, width, height);
+}
+
 // Generate variants
 async function generateVariants() {
     if (!uploadedImage) return;
@@ -325,7 +359,12 @@ async function generateVariants() {
                 const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
                 const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
                 
-                tileTraits.push({ numColors, hueName, contrast: contrast.toFixed(2) });
+                // Channel Shift Rarity (Per tile)
+                const shiftRoll = rng();
+                let channelShift = 'None';
+                if (shiftRoll > 0.85) channelShift = 'Misprint';
+
+                tileTraits.push({ numColors, hueName, contrast: contrast.toFixed(2), channelShift });
 
                 const tileCanvas = document.createElement('canvas');
                 tileCanvas.width = img.width;
@@ -338,7 +377,10 @@ async function generateVariants() {
                 // 1. Dither
                 const dithered = applyDithering(imageData, paletteColors, contrast);
                 
-                tileCtx.putImageData(dithered, 0, 0);
+                // 2. Channel Shift
+                const shifted = applyChannelShift(dithered, channelShift);
+                
+                tileCtx.putImageData(shifted, 0, 0);
 
                 const x = (tileIdx % 2) * img.width;
                 const y = Math.floor(tileIdx / 2) * img.height;
@@ -357,7 +399,8 @@ async function generateVariants() {
                     'Theme': theme.name,
                     'Palette Type': tileTraits[0].hueName, // Dominant hue
                     'Palette Size': tileTraits.map(t => t.numColors).join(', '),
-                    'Contrast': tileTraits.map(t => t.contrast).join(', ')
+                    'Contrast': tileTraits.map(t => t.contrast).join(', '),
+                    'Channel Shift': tileTraits.map(t => t.channelShift).join(', ')
                 }
             });
 
@@ -374,6 +417,12 @@ async function generateVariants() {
             const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
             const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
 
+            // Channel Shift Rarity
+            const shiftRoll = rng();
+            let channelShift = 'None';
+            // Screen print misregistration effect (Subtle only)
+            if (shiftRoll > 0.85) channelShift = 'Misprint'; // 15% chance for "Misprint" (was Subtle)
+
             const canvas = document.createElement('canvas');
             canvas.width = img.width;
             canvas.height = img.height;
@@ -385,7 +434,10 @@ async function generateVariants() {
             // 1. Dither
             const dithered = applyDithering(imageData, paletteColors, contrast);
             
-            ctx.putImageData(dithered, 0, 0);
+            // 2. Apply Channel Shift (Post-process)
+            const shifted = applyChannelShift(dithered, channelShift);
+            
+            ctx.putImageData(shifted, 0, 0);
 
             variants.push({
                 id: i + 1,
@@ -396,7 +448,8 @@ async function generateVariants() {
                     'Theme': theme.name,
                     'Palette Type': hueName,
                     'Palette Size': numColors,
-                    'Contrast': contrast.toFixed(2)
+                    'Contrast': contrast.toFixed(2),
+                    'Channel Shift': channelShift
                 }
             });
 
@@ -411,150 +464,6 @@ async function generateVariants() {
     document.getElementById('progressBar').classList.add('hidden');
 }
 
-// Reroll logic
-async function regenerateVariant(id) {
-    const variantIndex = variants.findIndex(v => v.id === id);
-    if (variantIndex === -1 || !uploadedImage) return;
-
-    const variant = variants[variantIndex];
-    const rng = Math.random; // True random for reroll
-    
-    // Load image
-    const img = new Image();
-    img.src = uploadedImage;
-    await new Promise(resolve => { img.onload = resolve; });
-
-    let newVariant = { ...variant };
-
-    if (variant.tiled) {
-        // Tiled Logic
-        const gridCanvas = document.createElement('canvas');
-        gridCanvas.width = img.width * 2;
-        gridCanvas.height = img.height * 2;
-        const gridCtx = gridCanvas.getContext('2d');
-        
-        const theme = selectTheme(rng);
-        const tileTraits = [];
-        for (let tileIdx = 0; tileIdx < 4; tileIdx++) {
-            const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
-            const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
-            
-            tileTraits.push({ numColors, hueName, contrast: contrast.toFixed(2) });
-
-            const tileCanvas = document.createElement('canvas');
-            tileCanvas.width = img.width;
-            tileCanvas.height = img.height;
-            const tileCtx = tileCanvas.getContext('2d');
-            
-            tileCtx.drawImage(img, 0, 0);
-            const imageData = tileCtx.getImageData(0, 0, img.width, img.height);
-            const dithered = applyDithering(imageData, paletteColors, contrast);
-            tileCtx.putImageData(dithered, 0, 0);
-
-            const x = (tileIdx % 2) * img.width;
-            const y = Math.floor(tileIdx / 2) * img.height;
-            gridCtx.drawImage(tileCanvas, x, y);
-        }
-
-        newVariant.dataUrl = gridCanvas.toDataURL();
-        newVariant.theme = theme.name;
-        newVariant.traits = {
-            'Theme': theme.name,
-            'Palette Type': tileTraits[0].hueName,
-            'Palette Size': tileTraits.map(t => t.numColors).join(', '),
-            'Contrast': tileTraits.map(t => t.contrast).join(', ')
-        };
-
-    } else {
-        // Single Logic
-        const theme = selectTheme(rng);
-        const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
-        const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
-
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const dithered = applyDithering(imageData, paletteColors, contrast);
-        ctx.putImageData(dithered, 0, 0);
-
-        newVariant.dataUrl = canvas.toDataURL();
-        newVariant.theme = theme.name;
-        newVariant.traits = {
-            'Theme': theme.name,
-            'Palette Type': hueName,
-            'Palette Size': numColors,
-            'Contrast': contrast.toFixed(2)
-        };
-    }
-
-    variants[variantIndex] = newVariant;
-    
-    // Update DOM
-    const card = document.getElementById(`variant-card-${id}`);
-    if (card) {
-        const newCard = renderVariantCard(newVariant);
-        card.replaceWith(newCard);
-    }
-}
-
-function renderVariantCard(variant) {
-    const div = document.createElement('div');
-    div.id = `variant-card-${variant.id}`;
-    div.className = 'card group bg-[#0a0a0a] border border-[#333] hover:border-[#666] transition-colors rounded-xl overflow-hidden';
-    
-    // Theme color badge logic
-    let badgeColor = 'bg-gray-800 text-gray-300';
-    if (variant.theme === 'High Saturation') badgeColor = 'bg-fuchsia-900/50 text-fuchsia-200 border border-fuchsia-500/30';
-    if (variant.theme === 'High Luminance') badgeColor = 'bg-rose-100 text-rose-800 border border-rose-200';
-    if (variant.theme === 'Triadic Harmony') badgeColor = 'bg-blue-900/50 text-blue-200 border border-blue-500/30';
-    if (variant.theme === 'VV') badgeColor = 'bg-zinc-800 text-white border border-white/20';
-    if (variant.theme === 'Spectral') badgeColor = 'bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 text-white border border-white/10';
-
-    div.innerHTML = `
-        <div class="aspect-square w-full bg-[#111] border-b border-[#333] p-4 flex items-center justify-center relative group-hover:bg-[#151515] transition-colors">
-            <img src="${variant.dataUrl}" class="max-w-full max-h-full object-contain shadow-lg">
-            <button onclick="regenerateVariant(${variant.id})" class="absolute top-2 right-2 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm" title="Reroll Variant">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-            </button>
-        </div>
-        <div class="p-4">
-            <div class="flex justify-between items-start mb-3">
-                <div>
-                    <span class="font-mono text-xs text-gray-500 block mb-1">#${variant.id}</span>
-                    <div class="text-xs font-medium px-2 py-0.5 rounded-full inline-block ${badgeColor}">
-                        ${variant.theme.toUpperCase()}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="space-y-1 mb-4 border-t border-[#333] pt-3">
-                <div class="flex justify-between text-[10px] font-mono text-gray-500">
-                    <span>Palette:</span>
-                    <span class="text-gray-300">${variant.traits['Palette Type']} (${variant.traits['Palette Size']}c)</span>
-                </div>
-                <div class="flex justify-between text-[10px] font-mono text-gray-500">
-                    <span>Contrast:</span>
-                    <span class="text-gray-300">${variant.traits['Contrast']}</span>
-                </div>
-                ${variant.dimensions ? `
-                <div class="flex justify-between text-[10px] font-mono text-gray-500">
-                    <span>Size:</span>
-                    <span class="text-gray-300">${variant.dimensions}</span>
-                </div>` : ''}
-            </div>
-
-            <button onclick="downloadVariant(${variant.id})" class="w-full py-2 text-xs font-medium border border-[#333] rounded hover:bg-white hover:text-black hover:border-white transition-all">
-                Download PNG
-            </button>
-        </div>
-    `;
-    return div;
-}
-
 function displayVariants() {
     const grid = document.getElementById('variantsGrid');
     grid.innerHTML = '';
@@ -562,7 +471,59 @@ function displayVariants() {
     document.getElementById('results').classList.remove('hidden');
 
     variants.forEach(variant => {
-        grid.appendChild(renderVariantCard(variant));
+        const div = document.createElement('div');
+        div.className = 'card group bg-[#0a0a0a] border border-[#333] hover:border-[#666] transition-colors rounded-xl overflow-hidden';
+        
+        // Theme color badge logic
+        let badgeColor = 'bg-gray-800 text-gray-300';
+        if (variant.theme === 'High Saturation') badgeColor = 'bg-fuchsia-900/50 text-fuchsia-200 border border-fuchsia-500/30';
+        if (variant.theme === 'High Luminance') badgeColor = 'bg-rose-100 text-rose-800 border border-rose-200';
+        if (variant.theme === 'Triadic Harmony') badgeColor = 'bg-blue-900/50 text-blue-200 border border-blue-500/30';
+        if (variant.theme === 'Analogous') badgeColor = 'bg-teal-900/40 text-teal-200 border border-teal-500/30';
+        if (variant.theme === 'Split Comp.') badgeColor = 'bg-indigo-900/40 text-indigo-200 border border-indigo-500/30';
+        if (variant.theme === 'VV') badgeColor = 'bg-zinc-800 text-white border border-white/20';
+        if (variant.theme === 'Spectral') badgeColor = 'bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 text-white border border-white/10';
+
+        div.innerHTML = `
+            <div class="aspect-square w-full bg-[#111] border-b border-[#333] p-4 flex items-center justify-center">
+                <img src="${variant.dataUrl}" class="max-w-full max-h-full object-contain shadow-lg">
+            </div>
+            <div class="p-4">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <span class="font-mono text-xs text-gray-500 block mb-1">#${variant.id}</span>
+                        <div class="text-xs font-medium px-2 py-0.5 rounded-full inline-block ${badgeColor}">
+                            ${variant.theme.toUpperCase()}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-1 mb-4 border-t border-[#333] pt-3">
+                    <div class="flex justify-between text-[10px] font-mono text-gray-500">
+                        <span>Palette:</span>
+                        <span class="text-gray-300">${variant.traits['Palette Type']} (${variant.traits['Palette Size']}c)</span>
+                    </div>
+                    <div class="flex justify-between text-[10px] font-mono text-gray-500">
+                        <span>Contrast:</span>
+                        <span class="text-gray-300">${variant.traits['Contrast']}</span>
+                    </div>
+                    <div class="flex justify-between text-[10px] font-mono text-gray-500">
+                        <span>Effect:</span>
+                        <span class="text-gray-300">${variant.traits['Channel Shift']}</span>
+                    </div>
+                    ${variant.dimensions ? `
+                    <div class="flex justify-between text-[10px] font-mono text-gray-500">
+                        <span>Size:</span>
+                        <span class="text-gray-300">${variant.dimensions}</span>
+                    </div>` : ''}
+                </div>
+
+                <button onclick="downloadVariant(${variant.id})" class="w-full py-2 text-xs font-medium border border-[#333] rounded hover:bg-white hover:text-black hover:border-white transition-all">
+                    Download PNG
+                </button>
+            </div>
+        `;
+        grid.appendChild(div);
     });
 }
 
