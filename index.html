@@ -5,51 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dithering Machine</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        mono: ['"Courier New"', 'Courier', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white min-h-screen p-8">
+<body class="bg-black text-white min-h-screen p-8 font-mono antialiased selection:bg-white selection:text-black">
     <div class="max-w-7xl mx-auto">
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold mb-4 uppercase tracking-tighter border-b border-white/20 pb-8">
                 Dithering Machine
             </h1>
-            <p class="text-gray-300">Advanced dithering with exhaustive controls</p>
+            <p class="text-zinc-500 uppercase text-xs tracking-widest">Advanced dithering // Exhaustive controls</p>
         </div>
 
-        <div class="bg-slate-800/50 backdrop-blur rounded-lg p-6 mb-6 border border-purple-500/20">
-            <div class="flex flex-col gap-6">
-                <div class="flex flex-col items-center gap-4">
+        <div class="border border-white/20 p-8 mb-8">
+            <div class="flex flex-col gap-8">
+                <div class="flex flex-col items-center gap-6">
                     <input type="file" id="imageUpload" accept="image/*" class="hidden">
-                    <button id="uploadBtn" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg transition">
+                    <button id="uploadBtn" class="w-full max-w-sm px-6 py-4 border border-white hover:bg-white hover:text-black transition duration-300 uppercase text-sm tracking-widest font-bold">
                         Upload Image
                     </button>
-                    <img id="preview" class="max-w-sm rounded-lg border border-purple-500/30 hidden">
+                    <img id="preview" class="max-w-sm border border-white/20 hidden">
                 </div>
 
                 <div id="controls" class="hidden">
-                    <div class="border-t border-purple-500/20 pt-6 space-y-4">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="useTiling" checked class="w-4 h-4">
-                            <span class="text-sm text-gray-300">2x2 Tiling (Recommended)</span>
+                    <div class="border-t border-white/20 pt-8 space-y-8">
+                        <label class="flex items-center gap-4 cursor-pointer group">
+                            <div class="relative flex items-center">
+                                <input type="checkbox" id="useTiling" checked class="peer h-5 w-5 appearance-none border border-white checked:bg-white transition-colors">
+                                <svg class="absolute w-3 h-3 text-black pointer-events-none opacity-0 peer-checked:opacity-100 left-1 top-1" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2.5-2.5a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="text-sm uppercase tracking-wider font-bold">2x2 Tiling</span>
+                                <p class="text-xs text-zinc-500 mt-1 uppercase">Grid of 4 dithered variants</p>
+                            </div>
                         </label>
-                        <p class="text-xs text-gray-400 ml-6">Creates a 2x2 grid of your image with different dithering on each tile</p>
 
                         <div>
-                            <label class="block text-sm text-gray-300 mb-2">Number of Variants: <span id="numVariantsValue">10</span></label>
-                            <input type="range" id="numVariants" min="1" max="150" value="10" class="w-full">
+                            <label class="block text-xs uppercase tracking-widest text-zinc-500 mb-4">
+                                Variants: <span id="numVariantsValue" class="text-white font-bold">10</span>
+                            </label>
+                            <input type="range" id="numVariants" min="1" max="150" value="10" 
+                                class="w-full h-1 bg-zinc-800 appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-0">
                         </div>
 
                         <div>
-                            <label class="block text-sm text-gray-300 mb-2">Seed (optional)</label>
-                            <input type="text" id="seed" placeholder="Enter seed for reproducibility..." class="w-full px-4 py-2 bg-slate-700 border border-purple-500/30 rounded-lg text-white placeholder-gray-400">
+                            <label class="block text-xs uppercase tracking-widest text-zinc-500 mb-2">Seed</label>
+                            <input type="text" id="seed" placeholder="OPTIONAL SEED..." 
+                                class="w-full px-4 py-3 bg-black border border-white/20 text-white placeholder-zinc-700 focus:border-white outline-none transition-colors uppercase text-sm font-mono">
                         </div>
 
-                        <button id="generateBtn" class="w-full px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition">
+                        <button id="generateBtn" class="w-full px-8 py-4 bg-white text-black hover:bg-zinc-200 transition duration-300 uppercase text-sm tracking-widest font-bold">
                             Generate Variants
                         </button>
 
                         <div id="progressBar" class="hidden">
-                            <div class="bg-slate-800/50 rounded-full h-4 overflow-hidden border border-purple-500/20">
-                                <div id="progress" class="h-full bg-gradient-to-r from-purple-600 to-pink-600 transition-all duration-300" style="width: 0%"></div>
+                            <div class="h-1 bg-zinc-900 w-full">
+                                <div id="progress" class="h-full bg-white transition-all duration-300" style="width: 0%"></div>
                             </div>
                         </div>
                     </div>
@@ -58,13 +80,13 @@
         </div>
 
         <div id="results" class="hidden">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold">Generated Variants (<span id="variantCount">0</span>)</h2>
-                <button id="downloadMetadata" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition">
+            <div class="flex justify-between items-end mb-8 border-b border-white/20 pb-4">
+                <h2 class="text-xl font-bold uppercase tracking-tighter">Variants (<span id="variantCount">0</span>)</h2>
+                <button id="downloadMetadata" class="px-4 py-2 text-xs border border-white/20 hover:border-white hover:bg-white hover:text-black transition duration-300 uppercase tracking-wider">
                     Download Metadata
                 </button>
             </div>
-            <div id="variantsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+            <div id="variantsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8"></div>
         </div>
     </div>
 

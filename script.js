@@ -237,16 +237,16 @@ function displayVariants() {
 
     variants.forEach(variant => {
         const div = document.createElement('div');
-        div.className = 'bg-slate-800/50 rounded-lg overflow-hidden border border-purple-500/20';
+        div.className = 'border border-white/20 p-4';
         div.innerHTML = `
-            <img src="${variant.dataUrl}" class="w-full object-contain bg-slate-900">
-            <div class="p-3">
-                <div class="text-xs text-gray-300 mb-2">
-                    <span class="font-mono">#${variant.id}</span>
-                    ${variant.tiled ? '<span class="ml-2 text-purple-400 font-bold">2x2 GRID</span>' : ''}
+            <img src="${variant.dataUrl}" class="w-full object-contain bg-black border border-white/10 mb-4">
+            <div>
+                <div class="text-xs text-zinc-500 mb-2 uppercase tracking-widest flex justify-between items-center">
+                    <span class="font-mono text-white">#${variant.id}</span>
+                    ${variant.tiled ? '<span class="text-white font-bold">2x2 GRID</span>' : ''}
                 </div>
-                ${variant.dimensions ? `<div class="text-xs text-gray-400">${variant.dimensions}</div>` : ''}
-                <button onclick="downloadVariant(${variant.id})" class="w-full mt-2 px-3 py-1.5 bg-purple-600/50 hover:bg-purple-600 rounded text-xs transition">
+                ${variant.dimensions ? `<div class="text-xs text-zinc-600 mb-3 font-mono">${variant.dimensions}</div>` : ''}
+                <button onclick="downloadVariant(${variant.id})" class="w-full px-3 py-2 border border-white/20 hover:border-white hover:bg-white hover:text-black text-xs transition duration-300 uppercase tracking-wider font-bold">
                     Download
                 </button>
             </div>
