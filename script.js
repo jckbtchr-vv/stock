@@ -444,9 +444,12 @@ async function exportCollection() {
 }
 
 // Event listeners
-document.getElementById('uploadBtn').addEventListener('click', () => {
-    document.getElementById('imageUpload').click();
-});
+// Note: 'uploadBtn' was replaced by 'uploadPlaceholder' in HTML, but we'll attach listener to the placeholder ID
+// The click handler is also inline in the HTML onclick attribute, but adding it here is safer/cleaner.
+
+// We removed 'uploadBtn' from DOM, so let's target the new placeholder if we want JS handling,
+// but the HTML already has onclick="document.getElementById('imageUpload').click()".
+// Let's just fix the imageUpload change handler to hide the placeholder.
 
 document.getElementById('imageUpload').addEventListener('change', (e) => {
     const file = e.target.files[0];
@@ -456,6 +459,7 @@ document.getElementById('imageUpload').addEventListener('change', (e) => {
             uploadedImage = e.target.result;
             document.getElementById('preview').src = uploadedImage;
             document.getElementById('preview').classList.remove('hidden');
+            document.getElementById('uploadPlaceholder').classList.add('hidden'); // Hide the upload box
             document.getElementById('controls').classList.remove('hidden');
         };
         reader.readAsDataURL(file);
