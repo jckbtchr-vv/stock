@@ -3,32 +3,32 @@ let variants = [];
 
 // Theme Definitions
 const THEMES = {
-    NEON: {
-        name: 'Neon',
+    HIGH_SAT: {
+        name: 'High Saturation',
         weight: 0.2,
         palette: { minColors: 2, maxColors: 4, minSat: 85, maxSat: 100, minLight: 40, maxLight: 70, highContrast: true },
         contrast: { min: 1.4, max: 2.2 }
     },
-    PASTEL: {
-        name: 'Pastel',
+    HIGH_LUM: {
+        name: 'High Luminance',
         weight: 0.25,
         palette: { minColors: 4, maxColors: 6, minSat: 40, maxSat: 70, minLight: 70, maxLight: 90 },
         contrast: { min: 0.6, max: 1.0 }
     },
-    BOLD: {
-        name: 'Bold',
+    TRIADIC: {
+        name: 'Triadic Harmony',
         weight: 0.2,
         palette: { minColors: 3, maxColors: 5, minSat: 80, maxSat: 100, minLight: 40, maxLight: 60, useKeyColors: true },
         contrast: { min: 1.5, max: 2.5 }
     },
-    MONO_PLUS: {
+    VV: {
         name: 'VV',
         weight: 0.2,
         palette: { minColors: 3, maxColors: 4, isMonoPlus: true },
         contrast: { min: 2.0, max: 3.5 }
     },
-    IRIDESCENT: {
-        name: 'Iridescent',
+    SPECTRAL: {
+        name: 'Spectral',
         weight: 0.15,
         palette: { minColors: 6, maxColors: 12, minSat: 60, maxSat: 100, minLight: 50, maxLight: 80, spread: true },
         contrast: { min: 0.9, max: 1.4 }
@@ -58,7 +58,7 @@ function selectTheme(rng) {
             return THEMES[key];
         }
     }
-    return THEMES.NEON; // Fallback
+    return THEMES.HIGH_SAT; // Fallback
 }
 
 // Helper to check for muddy colors (low sat AND low light)
@@ -396,11 +396,11 @@ function displayVariants() {
         
         // Theme color badge logic
         let badgeColor = 'bg-gray-800 text-gray-300';
-        if (variant.theme === 'Neon') badgeColor = 'bg-fuchsia-900/50 text-fuchsia-200 border border-fuchsia-500/30';
-        if (variant.theme === 'Pastel') badgeColor = 'bg-rose-100 text-rose-800 border border-rose-200';
-        if (variant.theme === 'Bold') badgeColor = 'bg-blue-900/50 text-blue-200 border border-blue-500/30';
+        if (variant.theme === 'High Saturation') badgeColor = 'bg-fuchsia-900/50 text-fuchsia-200 border border-fuchsia-500/30';
+        if (variant.theme === 'High Luminance') badgeColor = 'bg-rose-100 text-rose-800 border border-rose-200';
+        if (variant.theme === 'Triadic Harmony') badgeColor = 'bg-blue-900/50 text-blue-200 border border-blue-500/30';
         if (variant.theme === 'VV') badgeColor = 'bg-zinc-800 text-white border border-white/20';
-        if (variant.theme === 'Iridescent') badgeColor = 'bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 text-white border border-white/10';
+        if (variant.theme === 'Spectral') badgeColor = 'bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 text-white border border-white/10';
 
         div.innerHTML = `
             <div class="aspect-square w-full bg-[#111] border-b border-[#333] p-4 flex items-center justify-center">
