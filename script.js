@@ -186,7 +186,28 @@ function generateColorPalette(theme, rng) {
             Math.round(b * 255)
         ]);
     }
-    return { colors, hueName, numColors };
+
+    // Enforce Dynamic Range (Prevent muddy/blobby artifacts)
+    const getLum = (c) => (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]);
+    let minLum = 255, maxLum = 0;
+    
+    colors.forEach(c => {
+        const l = getLum(c);
+        if (l < minLum) minLum = l;
+        if (l > maxLum) maxLum = l;
+    });
+
+    // If palette lacks darks (e.g. High Lum theme), add a dark anchor
+    if (minLum > 100) { 
+        colors.push([20, 20, 20]);
+    }
+    
+    // If palette lacks lights, add a light anchor
+    if (maxLum < 155) { 
+        colors.push([235, 235, 235]);
+    }
+
+    return { colors, hueName, numColors: colors.length };
 }
 
 // Apply Sierra dithering
@@ -304,9 +325,6 @@ async function generateVariants() {
                 const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
                 const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
                 
-                // Symmetry Rarity (Per tile)
-                // Removed Symmetry logic
-
                 tileTraits.push({ numColors, hueName, contrast: contrast.toFixed(2) });
 
                 const tileCanvas = document.createElement('canvas');
@@ -319,9 +337,6 @@ async function generateVariants() {
                 
                 // 1. Dither
                 const dithered = applyDithering(imageData, paletteColors, contrast);
-                
-                // 2. Symmetry (Removed)
-                // const processed = applySymmetry(dithered, symmetry);
                 
                 tileCtx.putImageData(dithered, 0, 0);
 
@@ -359,13 +374,6 @@ async function generateVariants() {
             const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
             const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
 
-            // Symmetry Rarity (Removed)
-            // const symRoll = rng();
-            // let symmetry = 'None';
-            // if (symRoll > 0.85) {
-            //     symmetry = rng() > 0.5 ? 'Horizontal' : 'Vertical';
-            // }
-
             const canvas = document.createElement('canvas');
             canvas.width = img.width;
             canvas.height = img.height;
@@ -376,9 +384,6 @@ async function generateVariants() {
             
             // 1. Dither
             const dithered = applyDithering(imageData, paletteColors, contrast);
-            
-            // 2. Apply Symmetry (Removed)
-            // const processed = applySymmetry(dithered, symmetry);
             
             ctx.putImageData(dithered, 0, 0);
 
