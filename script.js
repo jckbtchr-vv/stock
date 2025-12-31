@@ -4,79 +4,79 @@ let variants = [];
 // Theme Definitions
 const THEMES = {
     HIGH_SAT: {
-        name: 'Vivid',
+        name: 'Vibrant',
         weight: 0.1,
         palette: { minColors: 2, maxColors: 4, minSat: 85, maxSat: 100, minLight: 40, maxLight: 70, highContrast: true },
         contrast: { min: 1.4, max: 2.2 }
     },
     HIGH_LUM: {
-        name: 'Ethereal',
+        name: 'Bright',
         weight: 0.1,
         palette: { minColors: 4, maxColors: 6, minSat: 40, maxSat: 70, minLight: 70, maxLight: 90 },
         contrast: { min: 0.6, max: 1.0 }
     },
     TRIADIC: {
-        name: 'Equilibrium',
+        name: 'Harmony',
         weight: 0.1,
         palette: { minColors: 3, maxColors: 5, minSat: 80, maxSat: 100, minLight: 40, maxLight: 60, useKeyColors: true },
         contrast: { min: 1.5, max: 2.5 }
     },
     VV: {
-        name: 'VV',
+        name: 'Accent',
         weight: 0.1,
         palette: { minColors: 3, maxColors: 4, isMonoPlus: true },
         contrast: { min: 2.0, max: 3.5 }
     },
     ANALOGOUS: {
-        name: 'Proximity',
+        name: 'Tonal',
         weight: 0.05,
         palette: { minColors: 3, maxColors: 5, minSat: 50, maxSat: 90, minLight: 30, maxLight: 70, strategy: 'analogous' },
         contrast: { min: 1.1, max: 1.8 }
     },
     SPLIT_COMP: {
-        name: 'Deviation',
+        name: 'Contrast',
         weight: 0.05,
         palette: { minColors: 3, maxColors: 4, minSat: 60, maxSat: 100, minLight: 30, maxLight: 80, strategy: 'split_complementary' },
         contrast: { min: 1.4, max: 2.5 }
     },
     SPECTRAL: {
-        name: 'Prism',
+        name: 'Rainbow',
         weight: 0.1,
         palette: { minColors: 6, maxColors: 12, minSat: 60, maxSat: 100, minLight: 50, maxLight: 80, spread: true },
         contrast: { min: 0.9, max: 1.4 }
     },
     NEON: {
-        name: 'Flux',
+        name: 'Neon',
         weight: 0.1,
         palette: { minColors: 2, maxColors: 3, minSat: 90, maxSat: 100, minLight: 40, maxLight: 60, strategy: 'complementary' },
         contrast: { min: 1.8, max: 2.8 }
     },
     VINTAGE: {
-        name: 'Archive',
+        name: 'Muted',
         weight: 0.1,
         palette: { minColors: 3, maxColors: 5, minSat: 20, maxSat: 40, minLight: 40, maxLight: 60 },
         contrast: { min: 0.8, max: 1.2 }
     },
     DUOTONE: {
-        name: 'Binary',
+        name: 'Dual',
         weight: 0.1,
         palette: { minColors: 2, maxColors: 2, minSat: 60, maxSat: 100, minLight: 20, maxLight: 80, strategy: 'complementary' },
         contrast: { min: 1.5, max: 2.5 }
     },
     CYBERPUNK: {
-        name: 'Synthetic',
+        name: 'Electric',
         weight: 0.05,
         palette: { minColors: 3, maxColors: 4, minSat: 80, maxSat: 100, minLight: 30, maxLight: 70, strategy: 'triadic' },
         contrast: { min: 1.6, max: 2.4 }
     },
     PASTEL: {
-        name: 'Subdued',
+        name: 'Soft',
         weight: 0.05,
         palette: { minColors: 4, maxColors: 8, minSat: 10, maxSat: 30, minLight: 80, maxLight: 95 },
         contrast: { min: 0.5, max: 0.9 }
     },
     MONO_STRICT: {
-        name: 'Absolute',
+        name: 'Mono',
         weight: 0.1,
         palette: { minColors: 2, maxColors: 2, isMonoPlus: true },
         contrast: { min: 2.0, max: 3.5 }
@@ -627,19 +627,19 @@ function renderVariantCard(variant) {
     
     // Theme color badge logic
     let badgeColor = 'bg-gray-800 text-gray-300';
-    if (variant.theme === 'Vivid') badgeColor = 'bg-fuchsia-900/50 text-fuchsia-200 border border-fuchsia-500/30';
-    if (variant.theme === 'Ethereal') badgeColor = 'bg-rose-100 text-rose-800 border border-rose-200';
-    if (variant.theme === 'Equilibrium') badgeColor = 'bg-blue-900/50 text-blue-200 border border-blue-500/30';
-    if (variant.theme === 'Proximity') badgeColor = 'bg-teal-900/40 text-teal-200 border border-teal-500/30';
-    if (variant.theme === 'Deviation') badgeColor = 'bg-indigo-900/40 text-indigo-200 border border-indigo-500/30';
-    if (variant.theme === 'VV') badgeColor = 'bg-zinc-800 text-white border border-white/20';
-    if (variant.theme === 'Prism') badgeColor = 'bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 text-white border border-white/10';
-    if (variant.theme === 'Flux') badgeColor = 'bg-lime-900/40 text-lime-200 border border-lime-500/30';
-    if (variant.theme === 'Archive') badgeColor = 'bg-amber-900/40 text-amber-200 border border-amber-500/30';
-    if (variant.theme === 'Binary') badgeColor = 'bg-orange-900/40 text-orange-200 border border-orange-500/30';
-    if (variant.theme === 'Synthetic') badgeColor = 'bg-cyan-900/40 text-cyan-200 border border-cyan-500/30';
-    if (variant.theme === 'Subdued') badgeColor = 'bg-pink-100/10 text-pink-200 border border-pink-200/30';
-    if (variant.theme === 'Absolute') badgeColor = 'bg-white text-black font-bold';
+    if (variant.theme === 'Vibrant') badgeColor = 'bg-fuchsia-900/50 text-fuchsia-200 border border-fuchsia-500/30';
+    if (variant.theme === 'Bright') badgeColor = 'bg-rose-100 text-rose-800 border border-rose-200';
+    if (variant.theme === 'Harmony') badgeColor = 'bg-blue-900/50 text-blue-200 border border-blue-500/30';
+    if (variant.theme === 'Tonal') badgeColor = 'bg-teal-900/40 text-teal-200 border border-teal-500/30';
+    if (variant.theme === 'Contrast') badgeColor = 'bg-indigo-900/40 text-indigo-200 border border-indigo-500/30';
+    if (variant.theme === 'Accent') badgeColor = 'bg-zinc-800 text-white border border-white/20';
+    if (variant.theme === 'Rainbow') badgeColor = 'bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 text-white border border-white/10';
+    if (variant.theme === 'Neon') badgeColor = 'bg-lime-900/40 text-lime-200 border border-lime-500/30';
+    if (variant.theme === 'Muted') badgeColor = 'bg-amber-900/40 text-amber-200 border border-amber-500/30';
+    if (variant.theme === 'Dual') badgeColor = 'bg-orange-900/40 text-orange-200 border border-orange-500/30';
+    if (variant.theme === 'Electric') badgeColor = 'bg-cyan-900/40 text-cyan-200 border border-cyan-500/30';
+    if (variant.theme === 'Soft') badgeColor = 'bg-pink-100/10 text-pink-200 border border-pink-200/30';
+    if (variant.theme === 'Mono') badgeColor = 'bg-white text-black font-bold';
 
     div.innerHTML = `
         <div class="aspect-square w-full bg-[#111] border-b border-[#333] p-4 flex items-center justify-center relative group-hover:bg-[#151515] transition-colors">
