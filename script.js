@@ -22,10 +22,10 @@ const THEMES = {
         contrast: { min: 1.5, max: 2.5 }
     },
     MONO_PLUS: {
-        name: 'Mono+',
+        name: 'VV',
         weight: 0.2,
         palette: { minColors: 3, maxColors: 4, isMonoPlus: true },
-        contrast: { min: 1.2, max: 1.8 }
+        contrast: { min: 2.0, max: 3.5 }
     },
     IRIDESCENT: {
         name: 'Iridescent',
@@ -112,14 +112,24 @@ function generateColorPalette(theme, rng) {
             
             // Hue Generation
             if (strategy === 'mono_plus') {
+                // 50% chance to invert (Light background, dark text/elements)
+                const invert = rng() > 0.5;
+                
                 if (i === 0) {
                     h = keyHue / 360; // Accent
-                    s = (80 + rng() * 20) / 100;
-                    l = (50 + rng() * 30) / 100;
+                    s = (80 + rng() * 20) / 100; // High saturation accent
+                    l = (40 + rng() * 20) / 100; // Mid lightness for visibility
                 } else {
                     h = 0; // Grayscale
                     s = 0;
-                    l = (i / numColors); // Gradient of gray
+                    // Extreme contrast logic
+                    if (invert) {
+                        // Light background logic
+                        l = i === 1 ? 0.95 : (i === numColors - 1 ? 0.05 : 0.5);
+                    } else {
+                        // Dark background logic
+                        l = i === 1 ? 0.05 : (i === numColors - 1 ? 0.95 : 0.5);
+                    }
                 }
             } else if (strategy === 'spread') {
                 h = ((keyHue + (i * (360 / numColors))) % 360) / 360;
@@ -389,7 +399,7 @@ function displayVariants() {
         if (variant.theme === 'Neon') badgeColor = 'bg-fuchsia-900/50 text-fuchsia-200 border border-fuchsia-500/30';
         if (variant.theme === 'Pastel') badgeColor = 'bg-rose-100 text-rose-800 border border-rose-200';
         if (variant.theme === 'Bold') badgeColor = 'bg-blue-900/50 text-blue-200 border border-blue-500/30';
-        if (variant.theme === 'Mono+') badgeColor = 'bg-zinc-800 text-white border border-white/20';
+        if (variant.theme === 'VV') badgeColor = 'bg-zinc-800 text-white border border-white/20';
         if (variant.theme === 'Iridescent') badgeColor = 'bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 text-white border border-white/10';
 
         div.innerHTML = `
