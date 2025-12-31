@@ -13,10 +13,24 @@ function seededRandom(seed) {
     };
 }
 
+// Helper to get color name from hue
+function getHueName(hue) {
+    if (hue >= 345 || hue < 15) return 'Red';
+    if (hue >= 15 && hue < 45) return 'Orange';
+    if (hue >= 45 && hue < 75) return 'Yellow';
+    if (hue >= 75 && hue < 150) return 'Green';
+    if (hue >= 150 && hue < 190) return 'Cyan';
+    if (hue >= 190 && hue < 270) return 'Blue';
+    if (hue >= 270 && hue < 315) return 'Purple';
+    if (hue >= 315 && hue < 345) return 'Pink';
+    return 'Unknown';
+}
+
 // Generate random color palette
 function generateColorPalette(numColors, rng) {
     const colors = [];
     const baseHue = rng() * 360;
+    const hueName = getHueName(baseHue);
     
     for (let i = 0; i < numColors; i++) {
         const hue = (baseHue + (i * 360 / numColors)) % 360;
@@ -53,7 +67,7 @@ function generateColorPalette(numColors, rng) {
             Math.round(b * 255)
         ]);
     }
-    return colors;
+    return { colors, hueName };
 }
 
 // Apply Sierra dithering
@@ -162,10 +176,13 @@ async function generateVariants() {
             console.log(`Creating 2x2 grid ${variantIdx + 1}: ${gridCanvas.width}x${gridCanvas.height}`);
 
             // Generate 4 different dithered tiles
+            const tileTraits = [];
             for (let tileIdx = 0; tileIdx < 4; tileIdx++) {
                 const numColors = 2 + Math.floor(rng() * 7);
-                const paletteColors = generateColorPalette(numColors, rng);
+                const { colors: paletteColors, hueName } = generateColorPalette(numColors, rng);
                 const contrast = 0.6 + rng() * 1.6;
+
+                tileTraits.push({ numColors, hueName, contrast: contrast.toFixed(2) });
 
                 const tileCanvas = document.createElement('canvas');
                 tileCanvas.width = img.width;
@@ -183,11 +200,18 @@ async function generateVariants() {
                 gridCtx.drawImage(tileCanvas, x, y);
             }
 
+            // For tiled, we use the average/combined traits or just primary
+            const primaryTrait = tileTraits[0];
             variants.push({
                 id: variantIdx + 1,
                 dataUrl: gridCanvas.toDataURL(),
                 tiled: true,
-                dimensions: `${gridCanvas.width}x${gridCanvas.height}`
+                dimensions: `${gridCanvas.width}x${gridCanvas.height}`,
+                traits: {
+                    'Palette Size': tileTraits.map(t => t.numColors).join(', '),
+                    'Contrast': tileTraits.map(t => t.contrast).join(', '),
+                    'Color Theme': tileTraits.map(t => t.hueName).join(', ')
+                }
             });
 
             const progress = ((variantIdx + 1) / numVariants) * 100;
@@ -199,7 +223,7 @@ async function generateVariants() {
         
         for (let i = 0; i < numVariants; i++) {
             const numColors = 2 + Math.floor(rng() * 7);
-            const paletteColors = generateColorPalette(numColors, rng);
+            const { colors: paletteColors, hueName } = generateColorPalette(numColors, rng);
             const contrast = 0.6 + rng() * 1.6;
 
             const canvas = document.createElement('canvas');
@@ -215,7 +239,12 @@ async function generateVariants() {
             variants.push({
                 id: i + 1,
                 dataUrl: canvas.toDataURL(),
-                tiled: false
+                tiled: false,
+                traits: {
+                    'Palette Size': numColors,
+                    'Contrast': contrast.toFixed(2),
+                    'Color Theme': hueName
+                }
             });
 
             const progress = ((i + 1) / numVariants) * 100;
@@ -263,6 +292,62 @@ function downloadVariant(id) {
     link.click();
 }
 
+async function exportCollection() {
+    if (variants.length === 0) return;
+
+    const collectionName = document.getElementById('collectionName').value || 'Dither Collection';
+    const collectionDescription = document.getElementById('collectionDescription').value || '';
+    const exportBtn = document.getElementById('exportCollection');
+    
+    // Disable button and show loading state
+    const originalBtnText = exportBtn.textContent;
+    exportBtn.textContent = 'ZIPPING...';
+    exportBtn.disabled = true;
+
+    try {
+        const zip = new JSZip();
+        const imagesFolder = zip.folder("images");
+        const metadata = [];
+
+        // Process variants
+        for (const variant of variants) {
+            // Add image to zip
+            const imageName = `image-${variant.id}.png`;
+            const base64Data = variant.dataUrl.split(',')[1];
+            imagesFolder.file(imageName, base64Data, { base64: true });
+
+            // Build metadata object
+            const tokenMetadata = {
+                metadataId: variant.id,
+                imageRef: imageName,
+                name: `${collectionName} #${variant.id}`,
+                description: collectionDescription,
+                ...variant.traits
+            };
+            metadata.push(tokenMetadata);
+        }
+
+        // Add metadata.json to zip
+        zip.file("metadata.json", JSON.stringify(metadata, null, 2));
+
+        // Generate and download zip
+        const content = await zip.generateAsync({ type: "blob" });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = `${collectionName.replace(/\s+/g, '-').toLowerCase()}.zip`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+
+    } catch (err) {
+        console.error('Export failed:', err);
+        alert('Failed to create export zip. See console for details.');
+    } finally {
+        // Reset button
+        exportBtn.textContent = originalBtnText;
+        exportBtn.disabled = false;
+    }
+}
+
 // Event listeners
 document.getElementById('uploadBtn').addEventListener('click', () => {
     document.getElementById('imageUpload').click();
@@ -300,3 +385,5 @@ document.getElementById('downloadMetadata').addEventListener('click', () => {
     link.href = URL.createObjectURL(blob);
     link.click();
 });
+
+document.getElementById('exportCollection').addEventListener('click', exportCollection);

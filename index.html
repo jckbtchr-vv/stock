@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dithering Machine</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -60,6 +61,16 @@
                         </div>
 
                         <div>
+                            <label class="block text-xs uppercase tracking-widest text-zinc-500 mb-2">Collection Name</label>
+                            <input type="text" id="collectionName" placeholder="MY COLLECTION" 
+                                class="w-full px-4 py-3 bg-black border border-white/20 text-white placeholder-zinc-700 focus:border-white outline-none transition-colors uppercase text-sm font-mono mb-4">
+                            
+                            <label class="block text-xs uppercase tracking-widest text-zinc-500 mb-2">Description</label>
+                            <textarea id="collectionDescription" placeholder="COLLECTION DESCRIPTION..." 
+                                class="w-full px-4 py-3 bg-black border border-white/20 text-white placeholder-zinc-700 focus:border-white outline-none transition-colors uppercase text-sm font-mono h-24 resize-none"></textarea>
+                        </div>
+
+                        <div>
                             <label class="block text-xs uppercase tracking-widest text-zinc-500 mb-2">Seed</label>
                             <input type="text" id="seed" placeholder="OPTIONAL SEED..." 
                                 class="w-full px-4 py-3 bg-black border border-white/20 text-white placeholder-zinc-700 focus:border-white outline-none transition-colors uppercase text-sm font-mono">
@@ -82,9 +93,14 @@
         <div id="results" class="hidden">
             <div class="flex justify-between items-end mb-8 border-b border-white/20 pb-4">
                 <h2 class="text-xl font-bold uppercase tracking-tighter">Variants (<span id="variantCount">0</span>)</h2>
-                <button id="downloadMetadata" class="px-4 py-2 text-xs border border-white/20 hover:border-white hover:bg-white hover:text-black transition duration-300 uppercase tracking-wider">
-                    Download Metadata
-                </button>
+                <div class="flex gap-4">
+                    <button id="downloadMetadata" class="px-4 py-2 text-xs border border-white/20 hover:border-white hover:bg-white hover:text-black transition duration-300 uppercase tracking-wider">
+                        Download Metadata
+                    </button>
+                    <button id="exportCollection" class="px-4 py-2 text-xs border border-white bg-white text-black hover:bg-zinc-200 transition duration-300 uppercase tracking-wider font-bold">
+                        Export Collection
+                    </button>
+                </div>
             </div>
             <div id="variantsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8"></div>
         </div>
