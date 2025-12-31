@@ -3,81 +3,81 @@ let variants = [];
 
 // Theme Definitions
 const THEMES = {
-    HIGH_SAT: {
+    VIBRANT: {
         name: 'Vibrant',
-        weight: 0.1,
+        weight: 0.45,
         palette: { minColors: 2, maxColors: 4, minSat: 85, maxSat: 100, minLight: 40, maxLight: 70, highContrast: true },
         contrast: { min: 1.4, max: 2.2 }
     },
-    HIGH_LUM: {
+    BRIGHT: {
         name: 'Bright',
-        weight: 0.1,
+        weight: 0.25,
         palette: { minColors: 4, maxColors: 6, minSat: 40, maxSat: 70, minLight: 70, maxLight: 90 },
         contrast: { min: 0.6, max: 1.0 }
     },
-    TRIADIC: {
+    HARMONY: {
         name: 'Harmony',
         weight: 0.1,
         palette: { minColors: 3, maxColors: 5, minSat: 80, maxSat: 100, minLight: 40, maxLight: 60, useKeyColors: true },
         contrast: { min: 1.5, max: 2.5 }
     },
-    VV: {
-        name: 'Accent',
-        weight: 0.1,
-        palette: { minColors: 3, maxColors: 4, isMonoPlus: true },
-        contrast: { min: 2.0, max: 3.5 }
-    },
-    ANALOGOUS: {
+    TONAL: {
         name: 'Tonal',
         weight: 0.05,
         palette: { minColors: 3, maxColors: 5, minSat: 50, maxSat: 90, minLight: 30, maxLight: 70, strategy: 'analogous' },
         contrast: { min: 1.1, max: 1.8 }
     },
-    SPLIT_COMP: {
+    CONTRAST: {
         name: 'Contrast',
         weight: 0.05,
         palette: { minColors: 3, maxColors: 4, minSat: 60, maxSat: 100, minLight: 30, maxLight: 80, strategy: 'split_complementary' },
         contrast: { min: 1.4, max: 2.5 }
     },
-    SPECTRAL: {
-        name: 'Rainbow',
-        weight: 0.1,
-        palette: { minColors: 6, maxColors: 12, minSat: 60, maxSat: 100, minLight: 50, maxLight: 80, spread: true },
-        contrast: { min: 0.9, max: 1.4 }
+    ACCENT: {
+        name: 'Accent',
+        weight: 0.03,
+        palette: { minColors: 3, maxColors: 4, isMonoPlus: true },
+        contrast: { min: 2.0, max: 3.5 }
     },
-    NEON: {
-        name: 'Neon',
-        weight: 0.1,
-        palette: { minColors: 2, maxColors: 3, minSat: 90, maxSat: 100, minLight: 40, maxLight: 60, strategy: 'complementary' },
-        contrast: { min: 1.8, max: 2.8 }
-    },
-    VINTAGE: {
+    MUTED: {
         name: 'Muted',
-        weight: 0.1,
+        weight: 0.02,
         palette: { minColors: 3, maxColors: 5, minSat: 20, maxSat: 40, minLight: 40, maxLight: 60 },
         contrast: { min: 0.8, max: 1.2 }
     },
-    DUOTONE: {
+    DUAL: {
         name: 'Dual',
-        weight: 0.1,
+        weight: 0.015,
         palette: { minColors: 2, maxColors: 2, minSat: 60, maxSat: 100, minLight: 20, maxLight: 80, strategy: 'complementary' },
         contrast: { min: 1.5, max: 2.5 }
     },
-    CYBERPUNK: {
-        name: 'Electric',
-        weight: 0.05,
-        palette: { minColors: 3, maxColors: 4, minSat: 80, maxSat: 100, minLight: 30, maxLight: 70, strategy: 'triadic' },
-        contrast: { min: 1.6, max: 2.4 }
+    RAINBOW: {
+        name: 'Rainbow',
+        weight: 0.015,
+        palette: { minColors: 6, maxColors: 12, minSat: 60, maxSat: 100, minLight: 50, maxLight: 80, spread: true },
+        contrast: { min: 0.9, max: 1.4 }
     },
-    PASTEL: {
+    SOFT: {
         name: 'Soft',
-        weight: 0.05,
+        weight: 0.005,
         palette: { minColors: 4, maxColors: 8, minSat: 10, maxSat: 30, minLight: 80, maxLight: 95 },
         contrast: { min: 0.5, max: 0.9 }
     },
-    MONO_STRICT: {
+    ELECTRIC: {
+        name: 'Electric',
+        weight: 0.005,
+        palette: { minColors: 3, maxColors: 4, minSat: 80, maxSat: 100, minLight: 30, maxLight: 70, strategy: 'triadic' },
+        contrast: { min: 1.6, max: 2.4 }
+    },
+    NEON: {
+        name: 'Neon',
+        weight: 0.005,
+        palette: { minColors: 2, maxColors: 3, minSat: 90, maxSat: 100, minLight: 40, maxLight: 60, strategy: 'complementary' },
+        contrast: { min: 1.8, max: 2.8 }
+    },
+    MONO: {
         name: 'Mono',
-        weight: 0.1,
+        weight: 0.005,
         palette: { minColors: 2, maxColors: 2, isMonoPlus: true },
         contrast: { min: 2.0, max: 3.5 }
     }
@@ -100,13 +100,16 @@ function selectTheme(rng) {
     const roll = rng();
     let accumulatedWeight = 0;
     
+    let totalWeight = 0;
+    for (const key in THEMES) totalWeight += THEMES[key].weight;
+
     for (const key in THEMES) {
-        accumulatedWeight += THEMES[key].weight;
+        accumulatedWeight += THEMES[key].weight / totalWeight;
         if (roll <= accumulatedWeight) {
-            return THEMES[key];
+            return { ...THEMES[key], key };
         }
     }
-    return THEMES.HIGH_SAT; // Fallback
+    return { ...THEMES.VIBRANT, key: 'VIBRANT' };
 }
 
 // Helper to check for muddy colors (low sat AND low light)
@@ -431,6 +434,7 @@ async function generateVariants() {
                 tiled: true,
                 dimensions: `${gridCanvas.width}x${gridCanvas.height}`,
                 theme: theme.name,
+                themeKey: theme.key,
                 traits: {
                     'Theme': theme.name,
                     'Palette Type': tileTraits[0].hueName, // Dominant hue
@@ -480,6 +484,7 @@ async function generateVariants() {
                 dataUrl: canvas.toDataURL(),
                 tiled: false,
                 theme: theme.name,
+                themeKey: theme.key,
                 traits: {
                     'Theme': theme.name,
                     'Palette Type': hueName,
@@ -531,6 +536,7 @@ async function regenerateVariant(id) {
     await new Promise(resolve => { img.onload = resolve; });
 
     let newVariant = { ...variant };
+    const theme = THEMES[variant.themeKey] || selectTheme(rng);
 
     if (variant.tiled) {
         // Tiled Logic
@@ -539,7 +545,6 @@ async function regenerateVariant(id) {
         gridCanvas.height = img.height * 2;
         const gridCtx = gridCanvas.getContext('2d');
         
-        const theme = selectTheme(rng);
         const tileTraits = [];
         for (let tileIdx = 0; tileIdx < 4; tileIdx++) {
             const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
@@ -580,7 +585,6 @@ async function regenerateVariant(id) {
 
     } else {
         // Single Logic
-        const theme = selectTheme(rng);
         const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
         const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
 
