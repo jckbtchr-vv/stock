@@ -258,49 +258,6 @@ function applyDithering(imageData, palette, contrast) {
     return new ImageData(data, width, height);
 }
 
-// Apply Symmetry Effect
-function applySymmetry(imageData, type) {
-    if (type === 'None') return imageData;
-
-    const width = imageData.width;
-    const height = imageData.height;
-    const input = imageData.data;
-    const output = new Uint8ClampedArray(input.length);
-    
-    // Copy input to output initially
-    output.set(input);
-
-    if (type === 'Horizontal') {
-        // Mirror Left to Right
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width / 2; x++) {
-                const srcIdx = (y * width + x) * 4;
-                const destIdx = (y * width + (width - 1 - x)) * 4;
-                
-                output[destIdx] = input[srcIdx];
-                output[destIdx + 1] = input[srcIdx + 1];
-                output[destIdx + 2] = input[srcIdx + 2];
-                output[destIdx + 3] = input[srcIdx + 3];
-            }
-        }
-    } else if (type === 'Vertical') {
-        // Mirror Top to Bottom
-        for (let y = 0; y < height / 2; y++) {
-            for (let x = 0; x < width; x++) {
-                const srcIdx = (y * width + x) * 4;
-                const destIdx = ((height - 1 - y) * width + x) * 4;
-                
-                output[destIdx] = input[srcIdx];
-                output[destIdx + 1] = input[srcIdx + 1];
-                output[destIdx + 2] = input[srcIdx + 2];
-                output[destIdx + 3] = input[srcIdx + 3];
-            }
-        }
-    }
-
-    return new ImageData(output, width, height);
-}
-
 // Generate variants
 async function generateVariants() {
     if (!uploadedImage) return;
@@ -348,13 +305,9 @@ async function generateVariants() {
                 const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
                 
                 // Symmetry Rarity (Per tile)
-                const symRoll = rng();
-                let symmetry = 'None';
-                if (symRoll > 0.85) {
-                    symmetry = rng() > 0.5 ? 'Horizontal' : 'Vertical';
-                }
+                // Removed Symmetry logic
 
-                tileTraits.push({ numColors, hueName, contrast: contrast.toFixed(2), symmetry });
+                tileTraits.push({ numColors, hueName, contrast: contrast.toFixed(2) });
 
                 const tileCanvas = document.createElement('canvas');
                 tileCanvas.width = img.width;
@@ -367,10 +320,10 @@ async function generateVariants() {
                 // 1. Dither
                 const dithered = applyDithering(imageData, paletteColors, contrast);
                 
-                // 2. Symmetry
-                const processed = applySymmetry(dithered, symmetry);
+                // 2. Symmetry (Removed)
+                // const processed = applySymmetry(dithered, symmetry);
                 
-                tileCtx.putImageData(processed, 0, 0);
+                tileCtx.putImageData(dithered, 0, 0);
 
                 const x = (tileIdx % 2) * img.width;
                 const y = Math.floor(tileIdx / 2) * img.height;
@@ -389,8 +342,7 @@ async function generateVariants() {
                     'Theme': theme.name,
                     'Palette Type': tileTraits[0].hueName, // Dominant hue
                     'Palette Size': tileTraits.map(t => t.numColors).join(', '),
-                    'Contrast': tileTraits.map(t => t.contrast).join(', '),
-                    'Symmetry': tileTraits.map(t => t.symmetry).join(', ')
+                    'Contrast': tileTraits.map(t => t.contrast).join(', ')
                 }
             });
 
@@ -407,12 +359,12 @@ async function generateVariants() {
             const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
             const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
 
-            // Symmetry Rarity
-            const symRoll = rng();
-            let symmetry = 'None';
-            if (symRoll > 0.85) {
-                symmetry = rng() > 0.5 ? 'Horizontal' : 'Vertical';
-            }
+            // Symmetry Rarity (Removed)
+            // const symRoll = rng();
+            // let symmetry = 'None';
+            // if (symRoll > 0.85) {
+            //     symmetry = rng() > 0.5 ? 'Horizontal' : 'Vertical';
+            // }
 
             const canvas = document.createElement('canvas');
             canvas.width = img.width;
@@ -425,10 +377,10 @@ async function generateVariants() {
             // 1. Dither
             const dithered = applyDithering(imageData, paletteColors, contrast);
             
-            // 2. Apply Symmetry (Post-process)
-            const processed = applySymmetry(dithered, symmetry);
+            // 2. Apply Symmetry (Removed)
+            // const processed = applySymmetry(dithered, symmetry);
             
-            ctx.putImageData(processed, 0, 0);
+            ctx.putImageData(dithered, 0, 0);
 
             variants.push({
                 id: i + 1,
@@ -439,8 +391,7 @@ async function generateVariants() {
                     'Theme': theme.name,
                     'Palette Type': hueName,
                     'Palette Size': numColors,
-                    'Contrast': contrast.toFixed(2),
-                    'Symmetry': symmetry
+                    'Contrast': contrast.toFixed(2)
                 }
             });
 
@@ -495,10 +446,6 @@ function displayVariants() {
                     <div class="flex justify-between text-[10px] font-mono text-gray-500">
                         <span>Contrast:</span>
                         <span class="text-gray-300">${variant.traits['Contrast']}</span>
-                    </div>
-                    <div class="flex justify-between text-[10px] font-mono text-gray-500">
-                        <span>Symmetry:</span>
-                        <span class="text-gray-300">${variant.traits['Symmetry']}</span>
                     </div>
                     ${variant.dimensions ? `
                     <div class="flex justify-between text-[10px] font-mono text-gray-500">
