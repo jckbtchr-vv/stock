@@ -258,7 +258,7 @@ function applyDithering(imageData, palette, contrast) {
     return new ImageData(data, width, height);
 }
 
-// Apply Channel Shift (Chromatic Aberration)
+// Apply Channel Shift (Screen Print Misregistration)
 function applyChannelShift(imageData, intensity) {
     if (intensity === 'None') return imageData;
 
@@ -267,8 +267,8 @@ function applyChannelShift(imageData, intensity) {
     const input = imageData.data;
     const output = new Uint8ClampedArray(input.length);
     
-    // Define offset based on intensity
-    const offset = intensity === 'Extreme' ? 8 : 2; // Pixels to shift
+    // Fixed subtle offset for screen print effect
+    const offset = 2; 
 
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
@@ -341,8 +341,7 @@ async function generateVariants() {
                 // Channel Shift Rarity (Per tile)
                 const shiftRoll = rng();
                 let channelShift = 'None';
-                if (shiftRoll > 0.90) channelShift = 'Extreme';
-                else if (shiftRoll > 0.70) channelShift = 'Subtle';
+                if (shiftRoll > 0.85) channelShift = 'Misprint';
 
                 tileTraits.push({ numColors, hueName, contrast: contrast.toFixed(2), channelShift });
 
@@ -400,8 +399,8 @@ async function generateVariants() {
             // Channel Shift Rarity
             const shiftRoll = rng();
             let channelShift = 'None';
-            if (shiftRoll > 0.90) channelShift = 'Extreme'; // 10%
-            else if (shiftRoll > 0.70) channelShift = 'Subtle'; // 20%
+            // Screen print misregistration effect (Subtle only)
+            if (shiftRoll > 0.85) channelShift = 'Misprint'; // 15% chance for "Misprint" (was Subtle)
 
             const canvas = document.createElement('canvas');
             canvas.width = img.width;
@@ -475,7 +474,27 @@ function displayVariants() {
                         </div>
                     </div>
                 </div>
-                ${variant.dimensions ? `<div class="text-[10px] text-gray-600 font-mono mb-4">${variant.dimensions}</div>` : ''}
+                
+                <div class="space-y-1 mb-4 border-t border-[#333] pt-3">
+                    <div class="flex justify-between text-[10px] font-mono text-gray-500">
+                        <span>Palette:</span>
+                        <span class="text-gray-300">${variant.traits['Palette Type']} (${variant.traits['Palette Size']}c)</span>
+                    </div>
+                    <div class="flex justify-between text-[10px] font-mono text-gray-500">
+                        <span>Contrast:</span>
+                        <span class="text-gray-300">${variant.traits['Contrast']}</span>
+                    </div>
+                    <div class="flex justify-between text-[10px] font-mono text-gray-500">
+                        <span>Effect:</span>
+                        <span class="text-gray-300">${variant.traits['Channel Shift']}</span>
+                    </div>
+                    ${variant.dimensions ? `
+                    <div class="flex justify-between text-[10px] font-mono text-gray-500">
+                        <span>Size:</span>
+                        <span class="text-gray-300">${variant.dimensions}</span>
+                    </div>` : ''}
+                </div>
+
                 <button onclick="downloadVariant(${variant.id})" class="w-full py-2 text-xs font-medium border border-[#333] rounded hover:bg-white hover:text-black hover:border-white transition-all">
                     Download PNG
                 </button>
