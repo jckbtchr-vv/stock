@@ -21,8 +21,8 @@ const THEMES = {
         palette: { minColors: 3, maxColors: 5, minSat: 80, maxSat: 100, minLight: 40, maxLight: 60, useKeyColors: true },
         contrast: { min: 1.5, max: 2.5 }
     },
-    VV: {
-        name: 'VV',
+    MONO: {
+        name: 'Mono',
         weight: 0.2,
         palette: { minColors: 3, maxColors: 4, isMonoPlus: true },
         contrast: { min: 2.0, max: 3.5 }
@@ -426,7 +426,7 @@ function displayVariants() {
         if (variant.theme === 'High Saturation') badgeColor = 'bg-fuchsia-900/50 text-fuchsia-200 border border-fuchsia-500/30';
         if (variant.theme === 'High Luminance') badgeColor = 'bg-rose-100 text-rose-800 border border-rose-200';
         if (variant.theme === 'Triadic Harmony') badgeColor = 'bg-blue-900/50 text-blue-200 border border-blue-500/30';
-        if (variant.theme === 'VV') badgeColor = 'bg-zinc-800 text-white border border-white/20';
+        if (variant.theme === 'Mono') badgeColor = 'bg-zinc-800 text-white border border-white/20';
         if (variant.theme === 'Spectral') badgeColor = 'bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 text-white border border-white/10';
 
         div.innerHTML = `
