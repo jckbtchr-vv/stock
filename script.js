@@ -3,29 +3,35 @@ let variants = [];
 
 // Theme Definitions
 const THEMES = {
-    NOIR: {
-        name: 'Noir',
-        weight: 0.4,
-        palette: { minColors: 2, maxColors: 4, saturation: 0 },
-        contrast: { min: 1.2, max: 2.0 }
-    },
-    VAPOR: {
-        name: 'Vapor',
-        weight: 0.3,
-        palette: { minColors: 3, maxColors: 5, minHue: 150, maxHue: 320, minSat: 60, maxSat: 100 },
-        contrast: { min: 0.8, max: 1.2 }
-    },
-    GLITCH: {
-        name: 'Glitch',
+    NEON: {
+        name: 'Neon',
         weight: 0.2,
-        palette: { minColors: 2, maxColors: 2, minSat: 90, maxSat: 100, highContrast: true },
+        palette: { minColors: 2, maxColors: 4, minSat: 85, maxSat: 100, minLight: 40, maxLight: 70, highContrast: true },
+        contrast: { min: 1.4, max: 2.2 }
+    },
+    PASTEL: {
+        name: 'Pastel',
+        weight: 0.25,
+        palette: { minColors: 4, maxColors: 6, minSat: 40, maxSat: 70, minLight: 70, maxLight: 90 },
+        contrast: { min: 0.6, max: 1.0 }
+    },
+    BOLD: {
+        name: 'Bold',
+        weight: 0.2,
+        palette: { minColors: 3, maxColors: 5, minSat: 80, maxSat: 100, minLight: 40, maxLight: 60, useKeyColors: true },
         contrast: { min: 1.5, max: 2.5 }
     },
-    VOID: {
-        name: 'Void',
-        weight: 0.1,
-        palette: { minColors: 8, maxColors: 12, maxLight: 30 },
-        contrast: { min: 0.4, max: 0.7 }
+    MONO_PLUS: {
+        name: 'Mono+',
+        weight: 0.2,
+        palette: { minColors: 3, maxColors: 4, isMonoPlus: true },
+        contrast: { min: 1.2, max: 1.8 }
+    },
+    IRIDESCENT: {
+        name: 'Iridescent',
+        weight: 0.15,
+        palette: { minColors: 6, maxColors: 12, minSat: 60, maxSat: 100, minLight: 50, maxLight: 80, spread: true },
+        contrast: { min: 0.9, max: 1.4 }
     }
 };
 
@@ -52,7 +58,12 @@ function selectTheme(rng) {
             return THEMES[key];
         }
     }
-    return THEMES.NOIR; // Fallback
+    return THEMES.NEON; // Fallback
+}
+
+// Helper to check for muddy colors (low sat AND low light)
+function isMuddy(h, s, l) {
+    return s < 0.4 && l < 0.4;
 }
 
 // Helper to get color name from hue
@@ -74,47 +85,71 @@ function generateColorPalette(theme, rng) {
     const settings = theme.palette;
     const numColors = Math.floor(settings.minColors + rng() * (settings.maxColors - settings.minColors + 1));
     
-    // Determine base hue based on theme
-    let baseHue;
-    if (settings.minHue !== undefined && settings.maxHue !== undefined) {
-        baseHue = settings.minHue + rng() * (settings.maxHue - settings.minHue);
-    } else {
-        baseHue = rng() * 360;
+    // Pick Key Color
+    let keyHue = rng() * 360;
+    if (settings.useKeyColors) {
+        // Snap to bold primary/secondary hues
+        const targets = [0, 60, 120, 180, 240, 300];
+        keyHue = targets[Math.floor(rng() * targets.length)] + (rng() * 20 - 10); // +/- 10 degrees variation
     }
 
-    const hueName = getHueName(baseHue);
+    const hueName = getHueName(keyHue);
     
+    // Harmony Strategy
+    let strategy = 'random';
+    if (settings.isMonoPlus) strategy = 'mono_plus';
+    else if (settings.spread) strategy = 'spread';
+    else if (settings.highContrast) strategy = 'complementary';
+    else if (settings.useKeyColors) strategy = 'triadic';
+
     for (let i = 0; i < numColors; i++) {
-        let hue;
-        if (settings.highContrast) {
-            // Complementary hues for high contrast
-            hue = (baseHue + (i * 180)) % 360;
-        } else {
-            hue = (baseHue + (i * 360 / numColors)) % 360;
+        let h, s, l;
+        let attempts = 0;
+        let validColor = false;
+
+        while (!validColor && attempts < 10) {
+            attempts++;
+            
+            // Hue Generation
+            if (strategy === 'mono_plus') {
+                if (i === 0) {
+                    h = keyHue / 360; // Accent
+                    s = (80 + rng() * 20) / 100;
+                    l = (50 + rng() * 30) / 100;
+                } else {
+                    h = 0; // Grayscale
+                    s = 0;
+                    l = (i / numColors); // Gradient of gray
+                }
+            } else if (strategy === 'spread') {
+                h = ((keyHue + (i * (360 / numColors))) % 360) / 360;
+            } else if (strategy === 'complementary') {
+                const offset = i % 2 === 0 ? 0 : 180;
+                h = ((keyHue + offset + rng() * 30 - 15) % 360) / 360;
+            } else if (strategy === 'triadic') {
+                const offset = (i % 3) * 120;
+                h = ((keyHue + offset + rng() * 20 - 10) % 360) / 360;
+            } else {
+                h = ((keyHue + rng() * 60 - 30) % 360) / 360; // Analogous-ish
+            }
+
+            // Saturation & Lightness
+            if (strategy !== 'mono_plus' || i === 0) {
+                const minS = settings.minSat || 40;
+                const maxS = settings.maxSat || 100;
+                const minL = settings.minLight || 30;
+                const maxL = settings.maxLight || 80;
+
+                s = (minS + rng() * (maxS - minS)) / 100;
+                l = (minL + rng() * (maxL - minL)) / 100;
+            }
+
+            // Mud check
+            if (!isMuddy(h, s, l) || strategy === 'mono_plus') {
+                validColor = true;
+            }
         }
 
-        // Saturation logic
-        let saturation;
-        if (settings.saturation !== undefined) {
-            saturation = settings.saturation;
-        } else if (settings.minSat !== undefined && settings.maxSat !== undefined) {
-            saturation = settings.minSat + rng() * (settings.maxSat - settings.minSat);
-        } else {
-            saturation = 70 + rng() * 30; // Default
-        }
-
-        // Lightness logic
-        let lightness;
-        if (settings.maxLight !== undefined) {
-            lightness = 10 + rng() * (settings.maxLight - 10);
-        } else {
-            lightness = 40 + rng() * 40; // Default
-        }
-        
-        const h = hue / 360;
-        const s = saturation / 100;
-        const l = lightness / 100;
-        
         const hue2rgb = (p, q, t) => {
             if (t < 0) t += 1;
             if (t > 1) t -= 1;
@@ -351,10 +386,11 @@ function displayVariants() {
         
         // Theme color badge logic
         let badgeColor = 'bg-gray-800 text-gray-300';
-        if (variant.theme === 'Vapor') badgeColor = 'bg-pink-900/50 text-pink-200 border border-pink-500/30';
-        if (variant.theme === 'Glitch') badgeColor = 'bg-green-900/50 text-green-200 border border-green-500/30';
-        if (variant.theme === 'Void') badgeColor = 'bg-slate-900 text-slate-400 border border-slate-700';
-        if (variant.theme === 'Noir') badgeColor = 'bg-zinc-800 text-zinc-300 border border-zinc-600';
+        if (variant.theme === 'Neon') badgeColor = 'bg-fuchsia-900/50 text-fuchsia-200 border border-fuchsia-500/30';
+        if (variant.theme === 'Pastel') badgeColor = 'bg-rose-100 text-rose-800 border border-rose-200';
+        if (variant.theme === 'Bold') badgeColor = 'bg-blue-900/50 text-blue-200 border border-blue-500/30';
+        if (variant.theme === 'Mono+') badgeColor = 'bg-zinc-800 text-white border border-white/20';
+        if (variant.theme === 'Iridescent') badgeColor = 'bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-cyan-500/20 text-white border border-white/10';
 
         div.innerHTML = `
             <div class="aspect-square w-full bg-[#111] border-b border-[#333] p-4 flex items-center justify-center">
