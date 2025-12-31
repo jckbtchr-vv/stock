@@ -258,34 +258,43 @@ function applyDithering(imageData, palette, contrast) {
     return new ImageData(data, width, height);
 }
 
-// Apply Channel Shift (Screen Print Misregistration)
-function applyChannelShift(imageData, intensity) {
-    if (intensity === 'None') return imageData;
+// Apply Symmetry Effect
+function applySymmetry(imageData, type) {
+    if (type === 'None') return imageData;
 
     const width = imageData.width;
     const height = imageData.height;
     const input = imageData.data;
     const output = new Uint8ClampedArray(input.length);
     
-    // Fixed subtle offset for screen print effect
-    const offset = 2; 
+    // Copy input to output initially
+    output.set(input);
 
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-            const idx = (y * width + x) * 4;
-            
-            // Shift Red Left
-            const rX = Math.min(width - 1, Math.max(0, x - offset));
-            const rIdx = (y * width + rX) * 4;
-            
-            // Shift Blue Right
-            const bX = Math.min(width - 1, Math.max(0, x + offset));
-            const bIdx = (y * width + bX) * 4;
-
-            output[idx] = input[rIdx];     // Red from left
-            output[idx + 1] = input[idx + 1]; // Green stays
-            output[idx + 2] = input[bIdx + 2]; // Blue from right
-            output[idx + 3] = 255;         // Alpha
+    if (type === 'Horizontal') {
+        // Mirror Left to Right
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width / 2; x++) {
+                const srcIdx = (y * width + x) * 4;
+                const destIdx = (y * width + (width - 1 - x)) * 4;
+                
+                output[destIdx] = input[srcIdx];
+                output[destIdx + 1] = input[srcIdx + 1];
+                output[destIdx + 2] = input[srcIdx + 2];
+                output[destIdx + 3] = input[srcIdx + 3];
+            }
+        }
+    } else if (type === 'Vertical') {
+        // Mirror Top to Bottom
+        for (let y = 0; y < height / 2; y++) {
+            for (let x = 0; x < width; x++) {
+                const srcIdx = (y * width + x) * 4;
+                const destIdx = ((height - 1 - y) * width + x) * 4;
+                
+                output[destIdx] = input[srcIdx];
+                output[destIdx + 1] = input[srcIdx + 1];
+                output[destIdx + 2] = input[srcIdx + 2];
+                output[destIdx + 3] = input[srcIdx + 3];
+            }
         }
     }
 
@@ -338,12 +347,14 @@ async function generateVariants() {
                 const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
                 const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
                 
-                // Channel Shift Rarity (Per tile)
-                const shiftRoll = rng();
-                let channelShift = 'None';
-                if (shiftRoll > 0.85) channelShift = 'Misprint';
+                // Symmetry Rarity (Per tile)
+                const symRoll = rng();
+                let symmetry = 'None';
+                if (symRoll > 0.85) {
+                    symmetry = rng() > 0.5 ? 'Horizontal' : 'Vertical';
+                }
 
-                tileTraits.push({ numColors, hueName, contrast: contrast.toFixed(2), channelShift });
+                tileTraits.push({ numColors, hueName, contrast: contrast.toFixed(2), symmetry });
 
                 const tileCanvas = document.createElement('canvas');
                 tileCanvas.width = img.width;
@@ -356,10 +367,10 @@ async function generateVariants() {
                 // 1. Dither
                 const dithered = applyDithering(imageData, paletteColors, contrast);
                 
-                // 2. Channel Shift
-                const shifted = applyChannelShift(dithered, channelShift);
+                // 2. Symmetry
+                const processed = applySymmetry(dithered, symmetry);
                 
-                tileCtx.putImageData(shifted, 0, 0);
+                tileCtx.putImageData(processed, 0, 0);
 
                 const x = (tileIdx % 2) * img.width;
                 const y = Math.floor(tileIdx / 2) * img.height;
@@ -379,7 +390,7 @@ async function generateVariants() {
                     'Palette Type': tileTraits[0].hueName, // Dominant hue
                     'Palette Size': tileTraits.map(t => t.numColors).join(', '),
                     'Contrast': tileTraits.map(t => t.contrast).join(', '),
-                    'Channel Shift': tileTraits.map(t => t.channelShift).join(', ')
+                    'Symmetry': tileTraits.map(t => t.symmetry).join(', ')
                 }
             });
 
@@ -396,11 +407,12 @@ async function generateVariants() {
             const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
             const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
 
-            // Channel Shift Rarity
-            const shiftRoll = rng();
-            let channelShift = 'None';
-            // Screen print misregistration effect (Subtle only)
-            if (shiftRoll > 0.85) channelShift = 'Misprint'; // 15% chance for "Misprint" (was Subtle)
+            // Symmetry Rarity
+            const symRoll = rng();
+            let symmetry = 'None';
+            if (symRoll > 0.85) {
+                symmetry = rng() > 0.5 ? 'Horizontal' : 'Vertical';
+            }
 
             const canvas = document.createElement('canvas');
             canvas.width = img.width;
@@ -413,10 +425,10 @@ async function generateVariants() {
             // 1. Dither
             const dithered = applyDithering(imageData, paletteColors, contrast);
             
-            // 2. Apply Channel Shift (Post-process)
-            const shifted = applyChannelShift(dithered, channelShift);
+            // 2. Apply Symmetry (Post-process)
+            const processed = applySymmetry(dithered, symmetry);
             
-            ctx.putImageData(shifted, 0, 0);
+            ctx.putImageData(processed, 0, 0);
 
             variants.push({
                 id: i + 1,
@@ -428,7 +440,7 @@ async function generateVariants() {
                     'Palette Type': hueName,
                     'Palette Size': numColors,
                     'Contrast': contrast.toFixed(2),
-                    'Channel Shift': channelShift
+                    'Symmetry': symmetry
                 }
             });
 
@@ -485,8 +497,8 @@ function displayVariants() {
                         <span class="text-gray-300">${variant.traits['Contrast']}</span>
                     </div>
                     <div class="flex justify-between text-[10px] font-mono text-gray-500">
-                        <span>Effect:</span>
-                        <span class="text-gray-300">${variant.traits['Channel Shift']}</span>
+                        <span>Symmetry:</span>
+                        <span class="text-gray-300">${variant.traits['Symmetry']}</span>
                     </div>
                     ${variant.dimensions ? `
                     <div class="flex justify-between text-[10px] font-mono text-gray-500">
