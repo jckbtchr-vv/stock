@@ -258,6 +258,40 @@ function applyDithering(imageData, palette, contrast) {
     return new ImageData(data, width, height);
 }
 
+// Apply Channel Shift (Chromatic Aberration)
+function applyChannelShift(imageData, intensity) {
+    if (intensity === 'None') return imageData;
+
+    const width = imageData.width;
+    const height = imageData.height;
+    const input = imageData.data;
+    const output = new Uint8ClampedArray(input.length);
+    
+    // Define offset based on intensity
+    const offset = intensity === 'Extreme' ? 8 : 2; // Pixels to shift
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const idx = (y * width + x) * 4;
+            
+            // Shift Red Left
+            const rX = Math.min(width - 1, Math.max(0, x - offset));
+            const rIdx = (y * width + rX) * 4;
+            
+            // Shift Blue Right
+            const bX = Math.min(width - 1, Math.max(0, x + offset));
+            const bIdx = (y * width + bX) * 4;
+
+            output[idx] = input[rIdx];     // Red from left
+            output[idx + 1] = input[idx + 1]; // Green stays
+            output[idx + 2] = input[bIdx + 2]; // Blue from right
+            output[idx + 3] = 255;         // Alpha
+        }
+    }
+
+    return new ImageData(output, width, height);
+}
+
 // Generate variants
 async function generateVariants() {
     if (!uploadedImage) return;
@@ -303,8 +337,14 @@ async function generateVariants() {
             for (let tileIdx = 0; tileIdx < 4; tileIdx++) {
                 const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
                 const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
+                
+                // Channel Shift Rarity (Per tile)
+                const shiftRoll = rng();
+                let channelShift = 'None';
+                if (shiftRoll > 0.90) channelShift = 'Extreme';
+                else if (shiftRoll > 0.70) channelShift = 'Subtle';
 
-                tileTraits.push({ numColors, hueName, contrast: contrast.toFixed(2) });
+                tileTraits.push({ numColors, hueName, contrast: contrast.toFixed(2), channelShift });
 
                 const tileCanvas = document.createElement('canvas');
                 tileCanvas.width = img.width;
@@ -313,8 +353,14 @@ async function generateVariants() {
                 
                 tileCtx.drawImage(img, 0, 0);
                 const imageData = tileCtx.getImageData(0, 0, img.width, img.height);
+                
+                // 1. Dither
                 const dithered = applyDithering(imageData, paletteColors, contrast);
-                tileCtx.putImageData(dithered, 0, 0);
+                
+                // 2. Channel Shift
+                const shifted = applyChannelShift(dithered, channelShift);
+                
+                tileCtx.putImageData(shifted, 0, 0);
 
                 const x = (tileIdx % 2) * img.width;
                 const y = Math.floor(tileIdx / 2) * img.height;
@@ -333,7 +379,8 @@ async function generateVariants() {
                     'Theme': theme.name,
                     'Palette Type': tileTraits[0].hueName, // Dominant hue
                     'Palette Size': tileTraits.map(t => t.numColors).join(', '),
-                    'Contrast': tileTraits.map(t => t.contrast).join(', ')
+                    'Contrast': tileTraits.map(t => t.contrast).join(', '),
+                    'Channel Shift': tileTraits.map(t => t.channelShift).join(', ')
                 }
             });
 
@@ -350,6 +397,12 @@ async function generateVariants() {
             const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
             const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
 
+            // Channel Shift Rarity
+            const shiftRoll = rng();
+            let channelShift = 'None';
+            if (shiftRoll > 0.90) channelShift = 'Extreme'; // 10%
+            else if (shiftRoll > 0.70) channelShift = 'Subtle'; // 20%
+
             const canvas = document.createElement('canvas');
             canvas.width = img.width;
             canvas.height = img.height;
@@ -357,8 +410,14 @@ async function generateVariants() {
             
             ctx.drawImage(img, 0, 0);
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            
+            // 1. Dither
             const dithered = applyDithering(imageData, paletteColors, contrast);
-            ctx.putImageData(dithered, 0, 0);
+            
+            // 2. Apply Channel Shift (Post-process)
+            const shifted = applyChannelShift(dithered, channelShift);
+            
+            ctx.putImageData(shifted, 0, 0);
 
             variants.push({
                 id: i + 1,
@@ -369,7 +428,8 @@ async function generateVariants() {
                     'Theme': theme.name,
                     'Palette Type': hueName,
                     'Palette Size': numColors,
-                    'Contrast': contrast.toFixed(2)
+                    'Contrast': contrast.toFixed(2),
+                    'Channel Shift': channelShift
                 }
             });
 
