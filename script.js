@@ -12,8 +12,8 @@ const THEMES = {
     BRIGHT: {
         name: 'Bright',
         weight: 0.25,
-        palette: { minColors: 4, maxColors: 6, minSat: 40, maxSat: 70, minLight: 70, maxLight: 90 },
-        contrast: { min: 0.6, max: 1.0 }
+        palette: { minColors: 4, maxColors: 8, minSat: 20, maxSat: 85, minLight: 60, maxLight: 95, variance: true },
+        contrast: { min: 0.5, max: 1.2 }
     },
     HARMONY: {
         name: 'Harmony',
@@ -153,6 +153,10 @@ function generateColorPalette(theme, rng) {
         else if (settings.spread) strategy = 'spread';
         else if (settings.highContrast) strategy = 'complementary';
         else if (settings.useKeyColors) strategy = 'triadic';
+        else if (settings.variance) {
+            const strategies = ['spread', 'triadic', 'analogous', 'split_complementary', 'random'];
+            strategy = strategies[Math.floor(rng() * strategies.length)];
+        }
     }
 
     for (let i = 0; i < numColors; i++) {
@@ -205,10 +209,20 @@ function generateColorPalette(theme, rng) {
 
             // Saturation & Lightness
             if (strategy !== 'mono_plus' || i === 0) {
-                const minS = settings.minSat || 40;
-                const maxS = settings.maxSat || 100;
-                const minL = settings.minLight || 30;
-                const maxL = settings.maxLight || 80;
+                let minS = settings.minSat || 40;
+                let maxS = settings.maxSat || 100;
+                let minL = settings.minLight || 30;
+                let maxL = settings.maxLight || 80;
+
+                if (settings.variance) {
+                    // Randomly shift ranges slightly for each generation
+                    const shiftS = rng() * 20 - 10;
+                    const shiftL = rng() * 10 - 5;
+                    minS = Math.max(0, minS + shiftS);
+                    maxS = Math.min(100, maxS + shiftS);
+                    minL = Math.max(0, minL + shiftL);
+                    maxL = Math.min(100, maxL + shiftL);
+                }
 
                 s = (minS + rng() * (maxS - minS)) / 100;
                 l = (minL + rng() * (maxL - minL)) / 100;
