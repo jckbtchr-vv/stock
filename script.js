@@ -347,17 +347,31 @@ function displayVariants() {
 
     variants.forEach(variant => {
         const div = document.createElement('div');
-        div.className = 'border border-white/20 p-4';
+        div.className = 'card group bg-[#0a0a0a] border border-[#333] hover:border-[#666] transition-colors rounded-xl overflow-hidden';
+        
+        // Theme color badge logic
+        let badgeColor = 'bg-gray-800 text-gray-300';
+        if (variant.theme === 'Vapor') badgeColor = 'bg-pink-900/50 text-pink-200 border border-pink-500/30';
+        if (variant.theme === 'Glitch') badgeColor = 'bg-green-900/50 text-green-200 border border-green-500/30';
+        if (variant.theme === 'Void') badgeColor = 'bg-slate-900 text-slate-400 border border-slate-700';
+        if (variant.theme === 'Noir') badgeColor = 'bg-zinc-800 text-zinc-300 border border-zinc-600';
+
         div.innerHTML = `
-            <img src="${variant.dataUrl}" class="w-full object-contain bg-black border border-white/10 mb-4">
-            <div>
-                <div class="text-xs text-zinc-500 mb-2 uppercase tracking-widest flex justify-between items-center">
-                    <span class="font-mono text-white">#${variant.id}</span>
-                    <span class="text-zinc-400 font-bold">${variant.theme.toUpperCase()}</span>
+            <div class="aspect-square w-full bg-[#111] border-b border-[#333] p-4 flex items-center justify-center">
+                <img src="${variant.dataUrl}" class="max-w-full max-h-full object-contain shadow-lg">
+            </div>
+            <div class="p-4">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <span class="font-mono text-xs text-gray-500 block mb-1">#${variant.id}</span>
+                        <div class="text-xs font-medium px-2 py-0.5 rounded-full inline-block ${badgeColor}">
+                            ${variant.theme.toUpperCase()}
+                        </div>
+                    </div>
                 </div>
-                ${variant.dimensions ? `<div class="text-xs text-zinc-600 mb-3 font-mono">${variant.dimensions}</div>` : ''}
-                <button onclick="downloadVariant(${variant.id})" class="w-full px-3 py-2 border border-white/20 hover:border-white hover:bg-white hover:text-black text-xs transition duration-300 uppercase tracking-wider font-bold">
-                    Download
+                ${variant.dimensions ? `<div class="text-[10px] text-gray-600 font-mono mb-4">${variant.dimensions}</div>` : ''}
+                <button onclick="downloadVariant(${variant.id})" class="w-full py-2 text-xs font-medium border border-[#333] rounded hover:bg-white hover:text-black hover:border-white transition-all">
+                    Download PNG
                 </button>
             </div>
         `;

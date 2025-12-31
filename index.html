@@ -6,104 +6,189 @@
     <title>Dithering Machine</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
+                        sans: ['"Inter"', 'sans-serif'],
                         mono: ['"Courier New"', 'Courier', 'monospace'],
+                    },
+                    colors: {
+                        vercel: {
+                            black: '#000000',
+                            dark: '#111111',
+                            gray: '#333333',
+                            blue: '#0070f3',
+                            cyan: '#50e3c2',
+                            purple: '#7928ca',
+                            pink: '#ff0080',
+                            red: '#ff4d4d',
+                        }
                     }
                 }
             }
         }
     </script>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+        }
+        .btn-primary {
+            background-color: #fff;
+            color: #000;
+            border: 1px solid #fff;
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover {
+            background-color: transparent;
+            color: #fff;
+        }
+        .btn-secondary {
+            background-color: transparent;
+            color: #888;
+            border: 1px solid #333;
+            transition: all 0.2s ease;
+        }
+        .btn-secondary:hover {
+            color: #fff;
+            border-color: #fff;
+        }
+        .input-dark {
+            background-color: #000;
+            border: 1px solid #333;
+            color: #fff;
+            transition: border-color 0.2s ease;
+        }
+        .input-dark:focus {
+            border-color: #fff;
+            outline: none;
+        }
+        .card {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s ease;
+        }
+        .card:hover {
+            border-color: #666;
+        }
+    </style>
 </head>
-<body class="bg-black text-white min-h-screen p-8 font-mono antialiased selection:bg-white selection:text-black">
-    <div class="max-w-7xl mx-auto">
-        <div class="text-center mb-12">
-            <h1 class="text-4xl font-bold mb-4 uppercase tracking-tighter border-b border-white/20 pb-8">
+<body class="font-sans antialiased selection:bg-white selection:text-black">
+    <div class="max-w-6xl mx-auto px-6 py-12">
+        <header class="mb-16 text-center">
+            <h1 class="text-5xl font-bold mb-4 tracking-tight bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
                 Dithering Machine
             </h1>
-            <p class="text-zinc-500 uppercase text-xs tracking-widest">Advanced dithering // Exhaustive controls</p>
-        </div>
+            <p class="text-gray-500 text-lg">Advanced dithering generation engine</p>
+        </header>
 
-        <div class="border border-white/20 p-8 mb-8">
-            <div class="flex flex-col gap-8">
-                <div class="flex flex-col items-center gap-6">
+        <main class="space-y-12">
+            <!-- Upload Section -->
+            <section class="border border-[#333] rounded-xl p-8 bg-[#0a0a0a]">
+                <div class="flex flex-col items-center gap-8">
                     <input type="file" id="imageUpload" accept="image/*" class="hidden">
-                    <button id="uploadBtn" class="w-full max-w-sm px-6 py-4 border border-white hover:bg-white hover:text-black transition duration-300 uppercase text-sm tracking-widest font-bold">
-                        Upload Image
-                    </button>
-                    <img id="preview" class="max-w-sm border border-white/20 hidden">
+                    
+                    <div id="uploadPlaceholder" class="w-full max-w-xl h-64 border-2 border-dashed border-[#333] rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#666] transition-colors group" onclick="document.getElementById('imageUpload').click()">
+                        <div class="text-gray-500 group-hover:text-white transition-colors flex flex-col items-center">
+                            <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                            </svg>
+                            <span class="font-medium">Upload Image</span>
+                            <span class="text-sm text-gray-600 mt-2">PNG, JPG, WEBP up to 10MB</span>
+                        </div>
+                    </div>
+
+                    <img id="preview" class="max-w-sm rounded-lg border border-[#333] hidden shadow-2xl">
                 </div>
 
-                <div id="controls" class="hidden">
-                    <div class="border-t border-white/20 pt-8 space-y-8">
-                        <label class="flex items-center gap-4 cursor-pointer group">
-                            <div class="relative flex items-center">
-                                <input type="checkbox" id="useTiling" checked class="peer h-5 w-5 appearance-none border border-white checked:bg-white transition-colors">
+                <!-- Controls -->
+                <div id="controls" class="hidden mt-12 space-y-8 border-t border-[#333] pt-12">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Tiling -->
+                        <label class="flex items-start gap-4 cursor-pointer group p-4 border border-[#333] rounded-lg hover:border-[#666] transition-colors">
+                            <div class="relative flex items-center mt-1">
+                                <input type="checkbox" id="useTiling" checked class="peer h-5 w-5 appearance-none border border-[#666] rounded checked:bg-white checked:border-white transition-all">
                                 <svg class="absolute w-3 h-3 text-black pointer-events-none opacity-0 peer-checked:opacity-100 left-1 top-1" viewBox="0 0 16 16" fill="currentColor">
                                     <path d="M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2.5-2.5a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z"/>
                                 </svg>
                             </div>
                             <div>
-                                <span class="text-sm uppercase tracking-wider font-bold">2x2 Tiling</span>
-                                <p class="text-xs text-zinc-500 mt-1 uppercase">Grid of 4 dithered variants</p>
+                                <span class="text-sm font-semibold text-white">2x2 Tiling</span>
+                                <p class="text-sm text-gray-500 mt-1">Generate a 2x2 grid with 4 different dithered variants per output.</p>
                             </div>
                         </label>
 
-                        <div>
-                            <label class="block text-xs uppercase tracking-widest text-zinc-500 mb-4">
-                                Variants: <span id="numVariantsValue" class="text-white font-bold">10</span>
+                        <!-- Variants -->
+                        <div class="p-4 border border-[#333] rounded-lg">
+                            <label class="block text-sm font-semibold text-gray-400 mb-4 flex justify-between">
+                                <span>Variants</span>
+                                <span id="numVariantsValue" class="text-white">10</span>
                             </label>
                             <input type="range" id="numVariants" min="1" max="150" value="10" 
-                                class="w-full h-1 bg-zinc-800 appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-0">
-                        </div>
-
-                        <div>
-                            <label class="block text-xs uppercase tracking-widest text-zinc-500 mb-2">Collection Name</label>
-                            <input type="text" id="collectionName" placeholder="MY COLLECTION" 
-                                class="w-full px-4 py-3 bg-black border border-white/20 text-white placeholder-zinc-700 focus:border-white outline-none transition-colors uppercase text-sm font-mono mb-4">
-                            
-                            <label class="block text-xs uppercase tracking-widest text-zinc-500 mb-2">Description</label>
-                            <textarea id="collectionDescription" placeholder="COLLECTION DESCRIPTION..." 
-                                class="w-full px-4 py-3 bg-black border border-white/20 text-white placeholder-zinc-700 focus:border-white outline-none transition-colors uppercase text-sm font-mono h-24 resize-none"></textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs uppercase tracking-widest text-zinc-500 mb-2">Seed</label>
-                            <input type="text" id="seed" placeholder="OPTIONAL SEED..." 
-                                class="w-full px-4 py-3 bg-black border border-white/20 text-white placeholder-zinc-700 focus:border-white outline-none transition-colors uppercase text-sm font-mono">
-                        </div>
-
-                        <button id="generateBtn" class="w-full px-8 py-4 bg-white text-black hover:bg-zinc-200 transition duration-300 uppercase text-sm tracking-widest font-bold">
-                            Generate Variants
-                        </button>
-
-                        <div id="progressBar" class="hidden">
-                            <div class="h-1 bg-zinc-900 w-full">
-                                <div id="progress" class="h-full bg-white transition-all duration-300" style="width: 0%"></div>
-                            </div>
+                                class="w-full h-1 bg-[#333] rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg">
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <div id="results" class="hidden">
-            <div class="flex justify-between items-end mb-8 border-b border-white/20 pb-4">
-                <h2 class="text-xl font-bold uppercase tracking-tighter">Variants (<span id="variantCount">0</span>)</h2>
-                <div class="flex gap-4">
-                    <button id="downloadMetadata" class="px-4 py-2 text-xs border border-white/20 hover:border-white hover:bg-white hover:text-black transition duration-300 uppercase tracking-wider">
-                        Download Metadata
+                    <!-- Metadata Inputs -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Collection Name</label>
+                                <input type="text" id="collectionName" placeholder="My Collection" 
+                                    class="input-dark w-full px-4 py-3 rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Seed (Optional)</label>
+                                <input type="text" id="seed" placeholder="Enter custom seed..." 
+                                    class="input-dark w-full px-4 py-3 rounded-lg text-sm font-mono">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Description</label>
+                            <textarea id="collectionDescription" placeholder="Collection description for metadata..." 
+                                class="input-dark w-full px-4 py-3 rounded-lg text-sm h-[132px] resize-none"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Generate Button -->
+                    <button id="generateBtn" class="w-full py-4 btn-primary rounded-lg font-semibold text-sm tracking-wide">
+                        Generate Collection
                     </button>
-                    <button id="exportCollection" class="px-4 py-2 text-xs border border-white bg-white text-black hover:bg-zinc-200 transition duration-300 uppercase tracking-wider font-bold">
-                        Export Collection
-                    </button>
+
+                    <!-- Progress Bar -->
+                    <div id="progressBar" class="hidden">
+                        <div class="h-1 bg-[#333] w-full rounded-full overflow-hidden">
+                            <div id="progress" class="h-full bg-white transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2 text-center font-mono">Processing...</p>
+                    </div>
                 </div>
-            </div>
-            <div id="variantsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8"></div>
-        </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="results" class="hidden">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-8 pb-4 border-b border-[#333] gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight mb-1">Generated Variants</h2>
+                        <p class="text-gray-500 text-sm"><span id="variantCount">0</span> items ready for export</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button id="downloadMetadata" class="px-4 py-2 text-sm btn-secondary rounded-md font-medium">
+                            Download Metadata JSON
+                        </button>
+                        <button id="exportCollection" class="px-4 py-2 text-sm bg-white text-black rounded-md font-medium hover:bg-gray-200 transition-colors">
+                            Export Full Collection
+                        </button>
+                    </div>
+                </div>
+                <div id="variantsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+            </section>
+        </main>
     </div>
 
     <script src="script.js"></script>
