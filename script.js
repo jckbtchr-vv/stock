@@ -680,6 +680,43 @@ function displayVariants() {
     document.getElementById('variantCount').textContent = variants.length;
     document.getElementById('results').classList.remove('hidden');
 
+    // Calculate system summary
+    const summary = {};
+    variants.forEach(v => {
+        summary[v.theme] = (summary[v.theme] || 0) + 1;
+    });
+
+    const summaryContainer = document.getElementById('systemSummary');
+    summaryContainer.innerHTML = '';
+    
+    // Sort systems by count (descending)
+    Object.entries(summary)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([theme, count]) => {
+            const badge = document.createElement('div');
+            // Re-use badge color logic or just use a standard one for summary
+            let badgeStyle = 'bg-zinc-900 border border-zinc-800 text-zinc-400';
+            
+            // Map theme back to specific style if possible (mirroring renderVariantCard)
+            if (theme === 'Vibrant') badgeStyle = 'bg-fuchsia-900/30 text-fuchsia-300 border border-fuchsia-500/20';
+            if (theme === 'Bright') badgeStyle = 'bg-rose-900/30 text-rose-300 border border-rose-500/20';
+            if (theme === 'Harmony') badgeStyle = 'bg-blue-900/30 text-blue-300 border border-blue-500/20';
+            if (theme === 'Tonal') badgeStyle = 'bg-teal-900/30 text-teal-300 border border-teal-500/20';
+            if (theme === 'Contrast') badgeStyle = 'bg-indigo-900/30 text-indigo-300 border border-indigo-500/20';
+            if (theme === 'Accent') badgeStyle = 'bg-zinc-800 text-white border border-white/20';
+            if (theme === 'Rainbow') badgeStyle = 'bg-purple-900/30 text-purple-300 border border-purple-500/20';
+            if (theme === 'Neon') badgeStyle = 'bg-lime-900/30 text-lime-300 border border-lime-500/20';
+            if (theme === 'Muted') badgeStyle = 'bg-amber-900/30 text-amber-300 border border-amber-500/20';
+            if (theme === 'Dual') badgeStyle = 'bg-orange-900/30 text-orange-300 border border-orange-500/20';
+            if (theme === 'Electric') badgeStyle = 'bg-cyan-900/30 text-cyan-300 border border-cyan-500/20';
+            if (theme === 'Soft') badgeStyle = 'bg-pink-900/30 text-pink-300 border border-pink-500/20';
+            if (theme === 'Mono') badgeStyle = 'bg-white/10 text-white border border-white/20';
+
+            badge.className = `px-3 py-1 rounded-full text-[10px] font-mono flex items-center gap-2 ${badgeStyle}`;
+            badge.innerHTML = `<span>${theme.toUpperCase()}</span><span class="opacity-50 text-[9px]">${count}</span>`;
+            summaryContainer.appendChild(badge);
+        });
+
     variants.forEach(variant => {
         grid.appendChild(renderVariantCard(variant));
     });
