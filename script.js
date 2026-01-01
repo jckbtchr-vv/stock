@@ -110,6 +110,46 @@ function invertImageData(imageData) {
     }
 }
 
+// Pre-process effects for variance
+function applyPreProcess(ctx, img, width, height, rng) {
+    ctx.clearRect(0, 0, width, height);
+    ctx.save();
+
+    // 1. Random Flip (50% chance each axis)
+    const flipH = rng() > 0.5;
+    const flipV = rng() > 0.5;
+    ctx.translate(flipH ? width : 0, flipV ? height : 0);
+    ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+
+    ctx.drawImage(img, 0, 0, width, height);
+    ctx.restore();
+
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+
+    // 2. Random Inversion (33% chance)
+    if (rng() > 0.67) {
+        invertImageData(imageData);
+    }
+
+    // 3. Brightness/Contrast Jitter (±15%)
+    const brightness = (rng() * 0.3) - 0.15; // -0.15 to +0.15
+    const contrast = 1 + ((rng() * 0.3) - 0.15); // 0.85 to 1.15
+
+    for (let i = 0; i < data.length; i += 4) {
+        for (let j = 0; j < 3; j++) {
+            // Apply contrast
+            let val = data[i + j] / 255;
+            val = ((val - 0.5) * contrast) + 0.5;
+            // Apply brightness
+            val += brightness;
+            data[i + j] = Math.max(0, Math.min(255, val * 255));
+        }
+    }
+
+    return imageData;
+}
+
 // Generate theme-aware color palette
 function generateColorPalette(theme, rng) {
     const colors = [];
@@ -404,15 +444,8 @@ async function generateVariants() {
                 tileCanvas.height = img.height;
                 const tileCtx = tileCanvas.getContext('2d');
                 
-                tileCtx.drawImage(img, 0, 0);
-                const imageData = tileCtx.getImageData(0, 0, img.width, img.height);
+                const imageData = applyPreProcess(tileCtx, img, img.width, img.height, rng);
                 
-                // Random Inversion (20% chance)
-                const invertRoll = rng();
-                if (invertRoll > 0.8) {
-                    invertImageData(imageData);
-                }
-
                 // 1. Dither
                 const dithered = applyDithering(imageData, paletteColors, contrast);
                 
@@ -464,15 +497,8 @@ async function generateVariants() {
             canvas.height = img.height;
             const ctx = canvas.getContext('2d');
             
-            ctx.drawImage(img, 0, 0);
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const imageData = applyPreProcess(ctx, img, canvas.width, canvas.height, rng);
             
-            // Random Inversion (20% chance)
-            const invertRoll = rng();
-            if (invertRoll > 0.8) {
-                invertImageData(imageData);
-            }
-
             // 1. Dither
             const dithered = applyDithering(imageData, paletteColors, contrast);
             
@@ -560,15 +586,7 @@ async function regenerateVariant(id) {
             tileCanvas.height = img.height;
             const tileCtx = tileCanvas.getContext('2d');
             
-            tileCtx.drawImage(img, 0, 0);
-            const imageData = tileCtx.getImageData(0, 0, img.width, img.height);
-
-            // Random Inversion (20% chance)
-            const invertRoll = rng();
-            if (invertRoll > 0.8) {
-                invertImageData(imageData);
-            }
-
+            const imageData = applyPreProcess(tileCtx, img, img.width, img.height, rng);
             const dithered = applyDithering(imageData, paletteColors, contrast);
             const shifted = applyChannelShift(dithered, channelShift);
             tileCtx.putImageData(shifted, 0, 0);
@@ -599,15 +617,7 @@ async function regenerateVariant(id) {
         canvas.height = img.height;
         const ctx = canvas.getContext('2d');
         
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-        // Random Inversion (20% chance)
-        const invertRoll = rng();
-        if (invertRoll > 0.8) {
-            invertImageData(imageData);
-        }
-
+        const imageData = applyPreProcess(ctx, img, canvas.width, canvas.height, rng);
         const dithered = applyDithering(imageData, paletteColors, contrast);
         const shifted = applyChannelShift(dithered, channelShift);
         ctx.putImageData(shifted, 0, 0);
