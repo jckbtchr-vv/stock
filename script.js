@@ -6,79 +6,79 @@ const THEMES = {
     VIBRANT: {
         name: 'Vibrant',
         weight: 0.45,
-        palette: { minColors: 2, maxColors: 4, minSat: 85, maxSat: 100, minLight: 40, maxLight: 70, highContrast: true, variance: true, allowedStrategies: ['complementary', 'triadic', 'split_complementary'] },
+        palette: { minColors: 2, maxColors: 4, minSat: 85, maxSat: 100, minLight: 40, maxLight: 70, highContrast: true },
         contrast: { min: 1.4, max: 2.2 }
     },
     BRIGHT: {
         name: 'Bright',
         weight: 0.25,
-        palette: { minColors: 4, maxColors: 8, minSat: 20, maxSat: 85, minLight: 60, maxLight: 95, variance: true, allowedStrategies: ['spread', 'triadic', 'analogous', 'split_complementary', 'random'] },
+        palette: { minColors: 4, maxColors: 8, minSat: 20, maxSat: 85, minLight: 60, maxLight: 95, variance: true },
         contrast: { min: 0.5, max: 1.2 }
     },
     HARMONY: {
         name: 'Harmony',
         weight: 0.1,
-        palette: { minColors: 3, maxColors: 5, minSat: 80, maxSat: 100, minLight: 40, maxLight: 60, useKeyColors: true, variance: true, allowedStrategies: ['triadic', 'split_complementary', 'spread'] },
+        palette: { minColors: 3, maxColors: 5, minSat: 80, maxSat: 100, minLight: 40, maxLight: 60, useKeyColors: true },
         contrast: { min: 1.5, max: 2.5 }
     },
     TONAL: {
         name: 'Tonal',
         weight: 0.05,
-        palette: { minColors: 3, maxColors: 5, minSat: 50, maxSat: 90, minLight: 30, maxLight: 70, strategy: 'analogous', variance: true, allowedStrategies: ['analogous', 'spread'] },
+        palette: { minColors: 3, maxColors: 5, minSat: 50, maxSat: 90, minLight: 30, maxLight: 70, strategy: 'analogous' },
         contrast: { min: 1.1, max: 1.8 }
     },
     CONTRAST: {
         name: 'Contrast',
         weight: 0.05,
-        palette: { minColors: 3, maxColors: 4, minSat: 60, maxSat: 100, minLight: 30, maxLight: 80, strategy: 'split_complementary', variance: true, allowedStrategies: ['split_complementary', 'complementary'] },
+        palette: { minColors: 3, maxColors: 4, minSat: 60, maxSat: 100, minLight: 30, maxLight: 80, strategy: 'split_complementary' },
         contrast: { min: 1.4, max: 2.5 }
     },
     ACCENT: {
         name: 'Accent',
         weight: 0.03,
-        palette: { minColors: 3, maxColors: 4, isMonoPlus: true, variance: true, allowedStrategies: ['mono_plus'] },
+        palette: { minColors: 3, maxColors: 4, isMonoPlus: true },
         contrast: { min: 2.0, max: 3.5 }
     },
     MUTED: {
         name: 'Muted',
         weight: 0.02,
-        palette: { minColors: 3, maxColors: 5, minSat: 20, maxSat: 40, minLight: 40, maxLight: 60, variance: true, allowedStrategies: ['analogous', 'random'] },
+        palette: { minColors: 3, maxColors: 5, minSat: 20, maxSat: 40, minLight: 40, maxLight: 60 },
         contrast: { min: 0.8, max: 1.2 }
     },
     DUAL: {
         name: 'Dual',
         weight: 0.015,
-        palette: { minColors: 2, maxColors: 2, minSat: 60, maxSat: 100, minLight: 20, maxLight: 80, strategy: 'complementary', variance: true, allowedStrategies: ['complementary'] },
+        palette: { minColors: 2, maxColors: 2, minSat: 60, maxSat: 100, minLight: 20, maxLight: 80, strategy: 'complementary' },
         contrast: { min: 1.5, max: 2.5 }
     },
     RAINBOW: {
         name: 'Rainbow',
         weight: 0.015,
-        palette: { minColors: 6, maxColors: 12, minSat: 60, maxSat: 100, minLight: 50, maxLight: 80, spread: true, variance: true, allowedStrategies: ['spread', 'random'] },
+        palette: { minColors: 6, maxColors: 12, minSat: 60, maxSat: 100, minLight: 50, maxLight: 80, spread: true },
         contrast: { min: 0.9, max: 1.4 }
     },
     SOFT: {
         name: 'Soft',
         weight: 0.005,
-        palette: { minColors: 4, maxColors: 8, minSat: 10, maxSat: 30, minLight: 80, maxLight: 95, variance: true, allowedStrategies: ['analogous', 'spread'] },
+        palette: { minColors: 4, maxColors: 8, minSat: 10, maxSat: 30, minLight: 80, maxLight: 95 },
         contrast: { min: 0.5, max: 0.9 }
     },
     ELECTRIC: {
         name: 'Electric',
         weight: 0.005,
-        palette: { minColors: 3, maxColors: 4, minSat: 80, maxSat: 100, minLight: 30, maxLight: 70, strategy: 'triadic', variance: true, allowedStrategies: ['triadic', 'split_complementary'] },
+        palette: { minColors: 3, maxColors: 4, minSat: 80, maxSat: 100, minLight: 30, maxLight: 70, strategy: 'triadic' },
         contrast: { min: 1.6, max: 2.4 }
     },
     NEON: {
         name: 'Neon',
         weight: 0.005,
-        palette: { minColors: 2, maxColors: 3, minSat: 90, maxSat: 100, minLight: 40, maxLight: 60, strategy: 'complementary', variance: true, allowedStrategies: ['complementary', 'triadic'] },
+        palette: { minColors: 2, maxColors: 3, minSat: 90, maxSat: 100, minLight: 40, maxLight: 60, strategy: 'complementary' },
         contrast: { min: 1.8, max: 2.8 }
     },
     MONO: {
         name: 'Mono',
         weight: 0.005,
-        palette: { minColors: 2, maxColors: 2, isMonoPlus: true, variance: true, allowedStrategies: ['mono_plus'] },
+        palette: { minColors: 2, maxColors: 2, isMonoPlus: true },
         contrast: { min: 2.0, max: 3.5 }
     }
 };
@@ -154,17 +154,9 @@ function generateColorPalette(theme, rng) {
         else if (settings.highContrast) strategy = 'complementary';
         else if (settings.useKeyColors) strategy = 'triadic';
         else if (settings.variance) {
-            const pool = settings.allowedStrategies || ['spread', 'triadic', 'analogous', 'split_complementary', 'random'];
-            strategy = pool[Math.floor(rng() * pool.length)];
+            const strategies = ['spread', 'triadic', 'analogous', 'split_complementary', 'random'];
+            strategy = strategies[Math.floor(rng() * strategies.length)];
         }
-    }
-
-    // Per-generation jitter offsets
-    let jitterS = 0;
-    let jitterL = 0;
-    if (settings.variance) {
-        jitterS = rng() * 20 - 10; // +/- 10%
-        jitterL = rng() * 10 - 5;  // +/- 5%
     }
 
     for (let i = 0; i < numColors; i++) {
@@ -223,10 +215,13 @@ function generateColorPalette(theme, rng) {
                 let maxL = settings.maxLight || 80;
 
                 if (settings.variance) {
-                    minS = Math.max(0, minS + jitterS);
-                    maxS = Math.min(100, maxS + jitterS);
-                    minL = Math.max(0, minL + jitterL);
-                    maxL = Math.min(100, maxL + jitterL);
+                    // Randomly shift ranges slightly for each generation
+                    const shiftS = rng() * 20 - 10;
+                    const shiftL = rng() * 10 - 5;
+                    minS = Math.max(0, minS + shiftS);
+                    maxS = Math.min(100, maxS + shiftS);
+                    minL = Math.max(0, minL + shiftL);
+                    maxL = Math.min(100, maxL + shiftL);
                 }
 
                 s = (minS + rng() * (maxS - minS)) / 100;
