@@ -17,13 +17,13 @@ const THEMES = {
     },
     CONTRAST: {
         name: 'Contrast',
-        weight: 28,
+        weight: 25,
         palette: { minColors: 3, maxColors: 4, minSat: 60, maxSat: 100, minLight: 30, maxLight: 80, strategy: 'split_complementary' },
         contrast: { min: 1.4, max: 2.5 }
     },
     HARMONY: {
         name: 'Harmony',
-        weight: 18,
+        weight: 15,
         palette: { minColors: 3, maxColors: 5, minSat: 80, maxSat: 100, minLight: 40, maxLight: 60, useKeyColors: true },
         contrast: { min: 1.5, max: 2.5 }
     },
@@ -35,9 +35,15 @@ const THEMES = {
     },
     DUAL: {
         name: 'Dual',
-        weight: 5,
+        weight: 7,
         palette: { minColors: 2, maxColors: 2, minSat: 60, maxSat: 100, minLight: 20, maxLight: 80, strategy: 'complementary' },
         contrast: { min: 1.5, max: 2.5 }
+    },
+    TONAL: {
+        name: 'Tonal',
+        weight: 4,
+        palette: { minColors: 3, maxColors: 5, minSat: 50, maxSat: 90, minLight: 30, maxLight: 70, strategy: 'analogous' },
+        contrast: { min: 1.1, max: 1.8 }
     },
     ACCENT: {
         name: 'Accent',
@@ -599,6 +605,7 @@ function renderVariantCard(variant) {
     if (variant.theme === 'Harmony') badgeColor = 'bg-blue-900/50 text-blue-200 border border-blue-500/30';
     if (variant.theme === 'Bright') badgeColor = 'bg-rose-100 text-rose-800 border border-rose-200';
     if (variant.theme === 'Dual') badgeColor = 'bg-orange-900/40 text-orange-200 border border-orange-500/30';
+    if (variant.theme === 'Tonal') badgeColor = 'bg-teal-900/40 text-teal-200 border border-teal-500/30';
     if (variant.theme === 'Accent') badgeColor = 'bg-zinc-800 text-white border border-white/20';
 
     div.innerHTML = `
@@ -662,6 +669,7 @@ function displayVariants() {
             if (theme === 'Harmony') badgeStyle = 'bg-blue-900/30 text-blue-300 border border-blue-500/20';
             if (theme === 'Bright') badgeStyle = 'bg-rose-900/30 text-rose-300 border border-rose-500/20';
             if (theme === 'Dual') badgeStyle = 'bg-orange-900/30 text-orange-300 border border-orange-500/20';
+            if (theme === 'Tonal') badgeStyle = 'bg-teal-900/30 text-teal-300 border border-teal-500/20';
             if (theme === 'Accent') badgeStyle = 'bg-zinc-800 text-white border border-white/20';
 
             badge.className = `px-3 py-1 rounded-full text-[10px] font-mono flex items-center gap-2 ${badgeStyle}`;
