@@ -4,49 +4,49 @@ let variants = [];
 // Theme Definitions
 const THEMES = {
     VIBRANT: {
-        name: 'Vibrant',
+        name: 'Max-Chroma',
         weight: 50,
         palette: { minColors: 2, maxColors: 4, minSat: 85, maxSat: 100, minLight: 40, maxLight: 70, highContrast: true },
         contrast: { min: 1.4, max: 2.2 }
     },
     MONO: {
-        name: 'Mono',
+        name: 'Bi-Level',
         weight: 38,
         palette: { minColors: 2, maxColors: 2, isMonoPlus: true },
         contrast: { min: 2.0, max: 3.5 }
     },
     CONTRAST: {
-        name: 'Contrast',
+        name: 'Split-Chromatic',
         weight: 25,
         palette: { minColors: 3, maxColors: 4, minSat: 60, maxSat: 100, minLight: 30, maxLight: 80, strategy: 'split_complementary' },
         contrast: { min: 1.4, max: 2.5 }
     },
     HARMONY: {
-        name: 'Harmony',
+        name: 'Triadic-Axis',
         weight: 15,
         palette: { minColors: 3, maxColors: 5, minSat: 80, maxSat: 100, minLight: 40, maxLight: 60, useKeyColors: true },
         contrast: { min: 1.5, max: 2.5 }
     },
     BRIGHT: {
-        name: 'Bright',
+        name: 'High-Luminance',
         weight: 10,
         palette: { minColors: 4, maxColors: 8, minSat: 20, maxSat: 85, minLight: 60, maxLight: 95, variance: true },
         contrast: { min: 0.5, max: 1.2 }
     },
     DUAL: {
-        name: 'Dual',
+        name: 'Di-Chromatic',
         weight: 7,
         palette: { minColors: 2, maxColors: 2, minSat: 60, maxSat: 100, minLight: 20, maxLight: 80, strategy: 'complementary' },
         contrast: { min: 1.5, max: 2.5 }
     },
     TONAL: {
-        name: 'Tonal',
+        name: 'Analogous-Range',
         weight: 4,
         palette: { minColors: 3, maxColors: 5, minSat: 50, maxSat: 90, minLight: 30, maxLight: 70, strategy: 'analogous' },
         contrast: { min: 1.1, max: 1.8 }
     },
     ACCENT: {
-        name: 'Accent',
+        name: 'Mono-Plus',
         weight: 1,
         palette: { minColors: 3, maxColors: 4, isMonoPlus: true },
         contrast: { min: 2.0, max: 3.5 }
@@ -636,14 +636,14 @@ function renderVariantCard(variant) {
     
     // Theme color badge logic
     let badgeColor = 'bg-gray-800 text-gray-300';
-    if (variant.theme === 'Vibrant') badgeColor = 'bg-fuchsia-900/50 text-fuchsia-200 border border-fuchsia-500/30';
-    if (variant.theme === 'Mono') badgeColor = 'bg-white text-black font-bold';
-    if (variant.theme === 'Contrast') badgeColor = 'bg-indigo-900/40 text-indigo-200 border border-indigo-500/30';
-    if (variant.theme === 'Harmony') badgeColor = 'bg-blue-900/50 text-blue-200 border border-blue-500/30';
-    if (variant.theme === 'Bright') badgeColor = 'bg-rose-100 text-rose-800 border border-rose-200';
-    if (variant.theme === 'Dual') badgeColor = 'bg-orange-900/40 text-orange-200 border border-orange-500/30';
-    if (variant.theme === 'Tonal') badgeColor = 'bg-teal-900/40 text-teal-200 border border-teal-500/30';
-    if (variant.theme === 'Accent') badgeColor = 'bg-zinc-800 text-white border border-white/20';
+    if (variant.theme === 'Max-Chroma') badgeColor = 'bg-fuchsia-900/50 text-fuchsia-200 border border-fuchsia-500/30';
+    if (variant.theme === 'Bi-Level') badgeColor = 'bg-white text-black font-bold';
+    if (variant.theme === 'Split-Chromatic') badgeColor = 'bg-indigo-900/40 text-indigo-200 border border-indigo-500/30';
+    if (variant.theme === 'Triadic-Axis') badgeColor = 'bg-blue-900/50 text-blue-200 border border-blue-500/30';
+    if (variant.theme === 'High-Luminance') badgeColor = 'bg-rose-100 text-rose-800 border border-rose-200';
+    if (variant.theme === 'Di-Chromatic') badgeColor = 'bg-orange-900/40 text-orange-200 border border-orange-500/30';
+    if (variant.theme === 'Analogous-Range') badgeColor = 'bg-teal-900/40 text-teal-200 border border-teal-500/30';
+    if (variant.theme === 'Mono-Plus') badgeColor = 'bg-zinc-800 text-white border border-white/20';
 
     div.innerHTML = `
         <div class="aspect-square w-full bg-[#111] border-b border-[#333] p-4 flex items-center justify-center relative group-hover:bg-[#151515] transition-colors">
@@ -700,14 +700,14 @@ function displayVariants() {
             let badgeStyle = 'bg-zinc-900 border border-zinc-800 text-zinc-400';
             
             // Map theme back to specific style if possible (mirroring renderVariantCard)
-            if (theme === 'Vibrant') badgeStyle = 'bg-fuchsia-900/30 text-fuchsia-300 border border-fuchsia-500/20';
-            if (theme === 'Mono') badgeStyle = 'bg-white/10 text-white border border-white/20';
-            if (theme === 'Contrast') badgeStyle = 'bg-indigo-900/30 text-indigo-300 border border-indigo-500/20';
-            if (theme === 'Harmony') badgeStyle = 'bg-blue-900/30 text-blue-300 border border-blue-500/20';
-            if (theme === 'Bright') badgeStyle = 'bg-rose-900/30 text-rose-300 border border-rose-500/20';
-            if (theme === 'Dual') badgeStyle = 'bg-orange-900/30 text-orange-300 border border-orange-500/20';
-            if (theme === 'Tonal') badgeStyle = 'bg-teal-900/30 text-teal-300 border border-teal-500/20';
-            if (theme === 'Accent') badgeStyle = 'bg-zinc-800 text-white border border-white/20';
+            if (theme === 'Max-Chroma') badgeStyle = 'bg-fuchsia-900/30 text-fuchsia-300 border border-fuchsia-500/20';
+            if (theme === 'Bi-Level') badgeStyle = 'bg-white/10 text-white border border-white/20';
+            if (theme === 'Split-Chromatic') badgeStyle = 'bg-indigo-900/30 text-indigo-300 border border-indigo-500/20';
+            if (theme === 'Triadic-Axis') badgeStyle = 'bg-blue-900/30 text-blue-300 border border-blue-500/20';
+            if (theme === 'High-Luminance') badgeStyle = 'bg-rose-900/30 text-rose-300 border border-rose-500/20';
+            if (theme === 'Di-Chromatic') badgeStyle = 'bg-orange-900/30 text-orange-300 border border-orange-500/20';
+            if (theme === 'Analogous-Range') badgeStyle = 'bg-teal-900/30 text-teal-300 border border-teal-500/20';
+            if (theme === 'Mono-Plus') badgeStyle = 'bg-zinc-800 text-white border border-white/20';
 
             badge.className = `px-3 py-1 rounded-full text-[10px] font-mono flex items-center gap-2 ${badgeStyle}`;
             badge.innerHTML = `<span>${theme.toUpperCase()}</span><span class="opacity-50 text-[9px]">${count}</span>`;
