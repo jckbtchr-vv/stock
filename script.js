@@ -121,28 +121,38 @@ function invertImageData(imageData) {
 // Pre-process effects for variance
 function applyPreProcess(ctx, img, width, height, rng) {
     ctx.clearRect(0, 0, width, height);
+    
+    ctx.save();
+    // 1. Hue Rotation (±20 degrees)
+    const hueShift = (rng() * 40) - 20;
+    ctx.filter = `hue-rotate(${hueShift}deg)`;
     ctx.drawImage(img, 0, 0, width, height);
+    ctx.restore();
 
     const imageData = ctx.getImageData(0, 0, width, height);
     const data = imageData.data;
 
-    // 1. Random Inversion (33% chance)
-    if (rng() > 0.67) {
+    // 2. Random Inversion (33% chance)
+    if (rng() < 0.33) {
         invertImageData(imageData);
     }
 
-    // 2. Brightness/Contrast Jitter (±15%)
+    // 3. Brightness/Contrast Jitter (±15%)
     const brightness = (rng() * 0.3) - 0.15; // -0.15 to +0.15
     const contrast = 1 + ((rng() * 0.3) - 0.15); // 0.85 to 1.15
 
     for (let i = 0; i < data.length; i += 4) {
+        // Add subtle grain/noise
+        const noise = (rng() * 10) - 5; 
+
         for (let j = 0; j < 3; j++) {
             // Apply contrast
             let val = data[i + j] / 255;
             val = ((val - 0.5) * contrast) + 0.5;
             // Apply brightness
             val += brightness;
-            data[i + j] = Math.max(0, Math.min(255, val * 255));
+            
+            data[i + j] = Math.max(0, Math.min(255, (val * 255) + noise));
         }
     }
 
