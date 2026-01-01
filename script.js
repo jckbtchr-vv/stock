@@ -65,7 +65,15 @@ function seededRandom(seed) {
     };
 }
 
-// Weighted Theme Selector
+// Fisher-Yates Shuffle with seeded RNG
+function shuffleArray(array, rng) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+// Weighted Theme Selector (Fallback for rerolls/over-capacity)
 function selectTheme(rng) {
     const roll = rng();
     let accumulatedWeight = 0;
@@ -402,6 +410,22 @@ async function generateVariants() {
     
     console.log('Image loaded:', img.width, 'x', img.height);
 
+    // Build theme schedule to ensure "at least once" and exact counts for 150
+    const keys = Object.keys(THEMES);
+    const guaranteed = [...keys];
+    const remainder = [];
+    
+    keys.forEach(key => {
+        const count = THEMES[key].weight - 1; // Subtract the one already in 'guaranteed'
+        for (let i = 0; i < count; i++) {
+            remainder.push(key);
+        }
+    });
+
+    shuffleArray(guaranteed, rng);
+    shuffleArray(remainder, rng);
+    const themePool = guaranteed.concat(remainder);
+
     if (useTiling) {
         console.log('=== ENTERING TILING MODE ===');
         
@@ -413,8 +437,9 @@ async function generateVariants() {
             
             console.log(`Creating 2x2 grid ${variantIdx + 1}: ${gridCanvas.width}x${gridCanvas.height}`);
 
-            // Select a theme for this variant
-            const theme = selectTheme(rng);
+            // Select theme from pre-calculated pool
+            const themeKey = themePool[variantIdx] || keys[Math.floor(rng() * keys.length)];
+            const theme = THEMES[themeKey];
             console.log(`Variant ${variantIdx + 1} Theme: ${theme.name}`);
 
             // Generate 4 different dithered tiles
@@ -458,7 +483,7 @@ async function generateVariants() {
                 tiled: true,
                 dimensions: `${gridCanvas.width}x${gridCanvas.height}`,
                 theme: theme.name,
-                themeKey: theme.key,
+                themeKey: themeKey,
                 traits: {
                     'System': theme.name
                 }
@@ -472,8 +497,9 @@ async function generateVariants() {
         console.log('=== ENTERING SINGLE IMAGE MODE ===');
         
         for (let i = 0; i < numVariants; i++) {
-            // Select a theme for this variant
-            const theme = selectTheme(rng);
+            // Select theme from pre-calculated pool
+            const themeKey = themePool[i] || keys[Math.floor(rng() * keys.length)];
+            const theme = THEMES[themeKey];
             const { colors: paletteColors, hueName, numColors } = generateColorPalette(theme, rng);
             const contrast = theme.contrast.min + rng() * (theme.contrast.max - theme.contrast.min);
 
@@ -503,7 +529,7 @@ async function generateVariants() {
                 dataUrl: canvas.toDataURL(),
                 tiled: false,
                 theme: theme.name,
-                themeKey: theme.key,
+                themeKey: themeKey,
                 traits: {
                     'System': theme.name
                 }
