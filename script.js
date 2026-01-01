@@ -113,26 +113,17 @@ function invertImageData(imageData) {
 // Pre-process effects for variance
 function applyPreProcess(ctx, img, width, height, rng) {
     ctx.clearRect(0, 0, width, height);
-    ctx.save();
-
-    // 1. Random Flip (50% chance each axis)
-    const flipH = rng() > 0.5;
-    const flipV = rng() > 0.5;
-    ctx.translate(flipH ? width : 0, flipV ? height : 0);
-    ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
-
     ctx.drawImage(img, 0, 0, width, height);
-    ctx.restore();
 
     const imageData = ctx.getImageData(0, 0, width, height);
     const data = imageData.data;
 
-    // 2. Random Inversion (33% chance)
+    // 1. Random Inversion (33% chance)
     if (rng() > 0.67) {
         invertImageData(imageData);
     }
 
-    // 3. Brightness/Contrast Jitter (±15%)
+    // 2. Brightness/Contrast Jitter (±15%)
     const brightness = (rng() * 0.3) - 0.15; // -0.15 to +0.15
     const contrast = 1 + ((rng() * 0.3) - 0.15); // 0.85 to 1.15
 
