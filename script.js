@@ -450,11 +450,7 @@ async function generateVariants() {
                 theme: theme.name,
                 themeKey: theme.key,
                 traits: {
-                    'Theme': theme.name,
-                    'Palette Type': tileTraits[0].hueName, // Dominant hue
-                    'Palette Size': tileTraits.map(t => t.numColors).join(', '),
-                    'Contrast': tileTraits.map(t => t.contrast).join(', '),
-                    'Channel Shift': tileTraits.map(t => t.channelShift).join(', ')
+                    'System': theme.name
                 }
             });
 
@@ -500,11 +496,7 @@ async function generateVariants() {
                 theme: theme.name,
                 themeKey: theme.key,
                 traits: {
-                    'Theme': theme.name,
-                    'Palette Type': hueName,
-                    'Palette Size': numColors,
-                    'Contrast': contrast.toFixed(2),
-                    'Channel Shift': channelShift
+                    'System': theme.name
                 }
             });
 
@@ -590,11 +582,7 @@ async function regenerateVariant(id) {
         newVariant.dataUrl = gridCanvas.toDataURL();
         newVariant.theme = theme.name;
         newVariant.traits = {
-            'Theme': theme.name,
-            'Palette Type': tileTraits[0].hueName,
-            'Palette Size': tileTraits.map(t => t.numColors).join(', '),
-            'Contrast': tileTraits.map(t => t.contrast).join(', '),
-            'Channel Shift': tileTraits.map(t => t.channelShift).join(', ')
+            'System': theme.name
         };
 
     } else {
@@ -621,11 +609,7 @@ async function regenerateVariant(id) {
         newVariant.dataUrl = canvas.toDataURL();
         newVariant.theme = theme.name;
         newVariant.traits = {
-            'Theme': theme.name,
-            'Palette Type': hueName,
-            'Palette Size': numColors,
-            'Contrast': contrast.toFixed(2),
-            'Channel Shift': channelShift
+            'System': theme.name
         };
     }
 
@@ -667,33 +651,13 @@ function renderVariantCard(variant) {
             </button>
         </div>
         <div class="p-4">
-            <div class="flex justify-between items-start mb-3">
+            <div class="flex justify-between items-start mb-4">
                 <div>
                     <span class="font-mono text-xs text-gray-500 block mb-1">#${variant.id}</span>
                     <div class="text-xs font-medium px-2 py-0.5 rounded-full inline-block ${badgeColor}">
                         ${variant.theme.toUpperCase()}
                     </div>
                 </div>
-            </div>
-            
-            <div class="space-y-1 mb-4 border-t border-[#333] pt-3">
-                <div class="flex justify-between text-[10px] font-mono text-gray-500">
-                    <span>Palette:</span>
-                    <span class="text-gray-300">${variant.traits['Palette Type']} (${variant.traits['Palette Size']}c)</span>
-                </div>
-                <div class="flex justify-between text-[10px] font-mono text-gray-500">
-                    <span>Contrast:</span>
-                    <span class="text-gray-300">${variant.traits['Contrast']}</span>
-                </div>
-                <div class="flex justify-between text-[10px] font-mono text-gray-500">
-                    <span>Effect:</span>
-                    <span class="text-gray-300">${variant.traits['Channel Shift']}</span>
-                </div>
-                ${variant.dimensions ? `
-                <div class="flex justify-between text-[10px] font-mono text-gray-500">
-                    <span>Size:</span>
-                    <span class="text-gray-300">${variant.dimensions}</span>
-                </div>` : ''}
             </div>
 
             <div class="flex gap-2">
@@ -817,6 +781,7 @@ document.getElementById('generateBtn').addEventListener('click', generateVariant
 document.getElementById('downloadMetadata').addEventListener('click', () => {
     const metadata = variants.map(v => ({
         id: v.id,
+        system: v.theme,
         tiled: v.tiled,
         dimensions: v.dimensions
     }));
