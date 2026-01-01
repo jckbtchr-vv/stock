@@ -5,43 +5,43 @@ let variants = [];
 const THEMES = {
     VIBRANT: {
         name: 'Vibrant',
-        weight: 0.50,
+        weight: 50,
         palette: { minColors: 2, maxColors: 4, minSat: 85, maxSat: 100, minLight: 40, maxLight: 70, highContrast: true },
         contrast: { min: 1.4, max: 2.2 }
     },
     MONO: {
         name: 'Mono',
-        weight: 0.25,
+        weight: 38,
         palette: { minColors: 2, maxColors: 2, isMonoPlus: true },
         contrast: { min: 2.0, max: 3.5 }
     },
     CONTRAST: {
         name: 'Contrast',
-        weight: 0.12,
+        weight: 28,
         palette: { minColors: 3, maxColors: 4, minSat: 60, maxSat: 100, minLight: 30, maxLight: 80, strategy: 'split_complementary' },
         contrast: { min: 1.4, max: 2.5 }
     },
     HARMONY: {
         name: 'Harmony',
-        weight: 0.06,
+        weight: 18,
         palette: { minColors: 3, maxColors: 5, minSat: 80, maxSat: 100, minLight: 40, maxLight: 60, useKeyColors: true },
         contrast: { min: 1.5, max: 2.5 }
     },
     BRIGHT: {
         name: 'Bright',
-        weight: 0.03,
+        weight: 10,
         palette: { minColors: 4, maxColors: 8, minSat: 20, maxSat: 85, minLight: 60, maxLight: 95, variance: true },
         contrast: { min: 0.5, max: 1.2 }
     },
     DUAL: {
         name: 'Dual',
-        weight: 0.02,
+        weight: 5,
         palette: { minColors: 2, maxColors: 2, minSat: 60, maxSat: 100, minLight: 20, maxLight: 80, strategy: 'complementary' },
         contrast: { min: 1.5, max: 2.5 }
     },
     ACCENT: {
         name: 'Accent',
-        weight: 0.02,
+        weight: 1,
         palette: { minColors: 3, maxColors: 4, isMonoPlus: true },
         contrast: { min: 2.0, max: 3.5 }
     }
