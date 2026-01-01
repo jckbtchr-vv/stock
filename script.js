@@ -100,6 +100,16 @@ function getHueName(hue) {
     return 'Unknown';
 }
 
+// Helper to invert image data
+function invertImageData(imageData) {
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+        data[i] = 255 - data[i];
+        data[i + 1] = 255 - data[i + 1];
+        data[i + 2] = 255 - data[i + 2];
+    }
+}
+
 // Generate theme-aware color palette
 function generateColorPalette(theme, rng) {
     const colors = [];
@@ -397,6 +407,12 @@ async function generateVariants() {
                 tileCtx.drawImage(img, 0, 0);
                 const imageData = tileCtx.getImageData(0, 0, img.width, img.height);
                 
+                // Random Inversion (20% chance)
+                const invertRoll = rng();
+                if (invertRoll > 0.8) {
+                    invertImageData(imageData);
+                }
+
                 // 1. Dither
                 const dithered = applyDithering(imageData, paletteColors, contrast);
                 
@@ -451,6 +467,12 @@ async function generateVariants() {
             ctx.drawImage(img, 0, 0);
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             
+            // Random Inversion (20% chance)
+            const invertRoll = rng();
+            if (invertRoll > 0.8) {
+                invertImageData(imageData);
+            }
+
             // 1. Dither
             const dithered = applyDithering(imageData, paletteColors, contrast);
             
@@ -540,6 +562,13 @@ async function regenerateVariant(id) {
             
             tileCtx.drawImage(img, 0, 0);
             const imageData = tileCtx.getImageData(0, 0, img.width, img.height);
+
+            // Random Inversion (20% chance)
+            const invertRoll = rng();
+            if (invertRoll > 0.8) {
+                invertImageData(imageData);
+            }
+
             const dithered = applyDithering(imageData, paletteColors, contrast);
             const shifted = applyChannelShift(dithered, channelShift);
             tileCtx.putImageData(shifted, 0, 0);
@@ -572,6 +601,13 @@ async function regenerateVariant(id) {
         
         ctx.drawImage(img, 0, 0);
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+        // Random Inversion (20% chance)
+        const invertRoll = rng();
+        if (invertRoll > 0.8) {
+            invertImageData(imageData);
+        }
+
         const dithered = applyDithering(imageData, paletteColors, contrast);
         const shifted = applyChannelShift(dithered, channelShift);
         ctx.putImageData(shifted, 0, 0);
