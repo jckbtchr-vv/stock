@@ -126,7 +126,11 @@ function applyPreProcess(ctx, img, width, height, rng) {
     // 1. Hue Rotation (±20 degrees)
     const hueShift = (rng() * 40) - 20;
     ctx.filter = `hue-rotate(${hueShift}deg)`;
-    ctx.drawImage(img, 0, 0, width, height);
+    
+    // 2. Phase Shift (±2px translation for pattern variance)
+    const shiftX = (rng() * 4) - 2;
+    const shiftY = (rng() * 4) - 2;
+    ctx.drawImage(img, shiftX, shiftY, width, height);
     ctx.restore();
 
     const imageData = ctx.getImageData(0, 0, width, height);
@@ -142,8 +146,8 @@ function applyPreProcess(ctx, img, width, height, rng) {
     const contrast = 1 + ((rng() * 0.3) - 0.15); // 0.85 to 1.15
 
     for (let i = 0; i < data.length; i += 4) {
-        // Add subtle grain/noise
-        const noise = (rng() * 10) - 5; 
+        // Filmic grain: bell-curve distribution for natural texture
+        const noise = ((rng() + rng() + rng()) / 3 - 0.5) * 15; 
 
         for (let j = 0; j < 3; j++) {
             // Apply contrast
@@ -293,7 +297,7 @@ function generateColorPalette(theme, rng) {
 }
 
 // Apply Sierra dithering
-function applyDithering(imageData, palette, contrast) {
+function applyDithering(imageData, palette, contrast, rng) {
     const data = new Uint8ClampedArray(imageData.data);
     const width = imageData.width;
     const height = imageData.height;
@@ -331,9 +335,11 @@ function applyDithering(imageData, palette, contrast) {
             const ny = y + dy;
             if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
                 const idx = (ny * width + nx) * 4;
-                data[idx] = Math.max(0, Math.min(255, data[idx] + errR * factor));
-                data[idx + 1] = Math.max(0, Math.min(255, data[idx + 1] + errG * factor));
-                data[idx + 2] = Math.max(0, Math.min(255, data[idx + 2] + errB * factor));
+                // Stochastic jitter: ±2% variance
+                const stochastic = 1 + (rng() * 0.04 - 0.02);
+                data[idx] = Math.max(0, Math.min(255, data[idx] + errR * factor * stochastic));
+                data[idx + 1] = Math.max(0, Math.min(255, data[idx + 1] + errG * factor * stochastic));
+                data[idx + 2] = Math.max(0, Math.min(255, data[idx + 2] + errB * factor * stochastic));
             }
         }
     };
@@ -473,7 +479,7 @@ async function generateVariants() {
                 const imageData = applyPreProcess(tileCtx, img, img.width, img.height, rng);
                 
                 // 1. Dither
-                const dithered = applyDithering(imageData, paletteColors, contrast);
+                const dithered = applyDithering(imageData, paletteColors, contrast, rng);
                 
                 // 2. Channel Shift
                 const shifted = applyChannelShift(dithered, channelShift);
@@ -527,7 +533,7 @@ async function generateVariants() {
             const imageData = applyPreProcess(ctx, img, canvas.width, canvas.height, rng);
             
             // 1. Dither
-            const dithered = applyDithering(imageData, paletteColors, contrast);
+            const dithered = applyDithering(imageData, paletteColors, contrast, rng);
             
             // 2. Apply Channel Shift (Post-process)
             const shifted = applyChannelShift(dithered, channelShift);
@@ -614,7 +620,7 @@ async function regenerateVariant(id) {
             const tileCtx = tileCanvas.getContext('2d');
             
             const imageData = applyPreProcess(tileCtx, img, img.width, img.height, rng);
-            const dithered = applyDithering(imageData, paletteColors, contrast);
+            const dithered = applyDithering(imageData, paletteColors, contrast, rng);
             const shifted = applyChannelShift(dithered, channelShift);
             tileCtx.putImageData(shifted, 0, 0);
 
@@ -645,7 +651,7 @@ async function regenerateVariant(id) {
         const ctx = canvas.getContext('2d');
         
         const imageData = applyPreProcess(ctx, img, canvas.width, canvas.height, rng);
-        const dithered = applyDithering(imageData, paletteColors, contrast);
+        const dithered = applyDithering(imageData, paletteColors, contrast, rng);
         const shifted = applyChannelShift(dithered, channelShift);
         ctx.putImageData(shifted, 0, 0);
 
